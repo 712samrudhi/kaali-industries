@@ -411,7 +411,7 @@ app.get("/test", (req, res) => {
 // ==================================================
 // ======= REACT FRONTEND - CATCH ALL ROUTE =========
 // ==================================================
-app.get("*", (req, res) => {
+app.get(/.*/, (req, res) => {
     res.sendFile(path.resolve(__dirname, "build", "index.html"));
 });
 
