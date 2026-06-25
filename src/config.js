@@ -7,6 +7,6 @@ const BASE_URL =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1" ?
     "http://localhost:5000" :
-    "https://api.nutrientfert.com"; // <-- ITHE TUMCHA LIVE BACKEND URL TAKA
+    "https://nutrientfert.com"; // <-- backend same domain var aahe
 
 export default BASE_URL;
