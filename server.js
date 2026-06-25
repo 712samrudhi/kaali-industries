@@ -31,7 +31,7 @@ app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ================= SERVE REACT BUILD =================
-app.use(express.static(path.join(__dirname, "../build")));
+app.use(express.static(path.join(__dirname, "build")));
 
 // ================= MULTER SETUP =================
 const storage = multer.diskStorage({
@@ -246,16 +246,14 @@ const detailsUpload = upload.fields([
     { name: "image3", maxCount: 1 },
     { name: "image4", maxCount: 1 }
 ]);
+
 app.post("/product-details", detailsUpload, (req, res) => {
     const { productId, productName, specification, about, keyBenefits, modeOfAction, recommendedApplication, suitableCrops, features, variants } = req.body;
-
     const image1 = (req.files && req.files.image1 && req.files.image1[0]) ? req.files.image1[0].filename : null;
     const image2 = (req.files && req.files.image2 && req.files.image2[0]) ? req.files.image2[0].filename : null;
     const image3 = (req.files && req.files.image3 && req.files.image3[0]) ? req.files.image3[0].filename : null;
     const image4 = (req.files && req.files.image4 && req.files.image4[0]) ? req.files.image4[0].filename : null;
-
     const sql = `INSERT INTO product_details(productId, productName, specification, about, keyBenefits, modeOfAction, recommendedApplication, suitableCrops, features, variants, image1, image2, image3, image4) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-
     db.query(sql, [productId, productName, specification, about, keyBenefits, modeOfAction, recommendedApplication, suitableCrops, features, variants, image1, image2, image3, image4], (err) => {
         if (err) {
             return res.status(500).json({ success: false, message: "Database Error" });
@@ -414,7 +412,7 @@ app.get("/test", (req, res) => {
 // ======= REACT FRONTEND - CATCH ALL ROUTE =========
 // ==================================================
 app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "../build", "index.html"));
+    res.sendFile(path.resolve(__dirname, "build", "index.html"));
 });
 
 // ==================================================
