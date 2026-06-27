@@ -240,11 +240,10 @@ app.put("/product-details/:id", detailsUpload, (req, res) => {
         oldImage3,
         oldImage4
     } = req.body;
-
-    const image1 = (req.files ? .image1 ? .[0]) ? req.files.image1[0].filename : oldImage1;
-    const image2 = (req.files ? .image2 ? .[0]) ? req.files.image2[0].filename : oldImage2;
-    const image3 = (req.files ? .image3 ? .[0]) ? req.files.image3[0].filename : oldImage3;
-    const image4 = (req.files ? .image4 ? .[0]) ? req.files.image4[0].filename : oldImage4;
+    const image1 = (req.files && req.files.image1 && req.files.image1[0]) ? req.files.image1[0].filename : oldImage1;
+    const image2 = (req.files && req.files.image2 && req.files.image2[0]) ? req.files.image2[0].filename : oldImage2;
+    const image3 = (req.files && req.files.image3 && req.files.image3[0]) ? req.files.image3[0].filename : oldImage3;
+    const image4 = (req.files && req.files.image4 && req.files.image4[0]) ? req.files.image4[0].filename : oldImage4;
 
     db.query(`UPDATE product_details SET productId=?, productName=?, specification=?, about=?,
         keyBenefits=?, modeOfAction=?, recommendedApplication=?, suitableCrops=?,
@@ -276,12 +275,10 @@ app.post("/product-details", detailsUpload, (req, res) => {
         variants,
         customSections
     } = req.body;
-
-    const image1 = req.files ? .image1 ? .[0] ? req.files.image1[0].filename : null;
-    const image2 = req.files ? .image2 ? .[0] ? req.files.image2[0].filename : null;
-    const image3 = req.files ? .image3 ? .[0] ? req.files.image3[0].filename : null;
-    const image4 = req.files ? .image4 ? .[0] ? req.files.image4[0].filename : null;
-
+    const image1 = (req.files && req.files.image1 && req.files.image1[0]) ? req.files.image1[0].filename : null;
+    const image2 = (req.files && req.files.image2 && req.files.image2[0]) ? req.files.image2[0].filename : null;
+    const image3 = (req.files && req.files.image3 && req.files.image3[0]) ? req.files.image3[0].filename : null;
+    const image4 = (req.files && req.files.image4 && req.files.image4[0]) ? req.files.image4[0].filename : null;
     db.query(`INSERT INTO product_details(productId, productName, specification, about,
         keyBenefits, modeOfAction, recommendedApplication, suitableCrops,
         features, variants, customSections, image1, image2, image3, image4)
