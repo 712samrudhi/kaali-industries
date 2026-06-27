@@ -9,6 +9,10 @@ const app = express();
 // ================= CRASH SAFETY NET =================
 process.on("uncaughtException", (err) => {
     console.error("Uncaught Exception:", err.message);
+    if (err.code === "ECONNRESET" || err.message.includes("Connection lost")) {
+        console.log("DB connection issue - continuing...");
+        return;
+    }
 });
 
 process.on("unhandledRejection", (err) => {
@@ -277,53 +281,26 @@ app.put("/product-details/:id", detailsUpload, (req, res) => {
     const image4 = (req.files && req.files.image4 && req.files.image4[0]) ? req.files.image4[0].filename : oldImage4;
 
     const sql = `
-        UPDATE product_details
-        SET
-            productId = ?,
-            productName = ?,
-            specification = ?,
-            about = ?,
-            keyBenefits = ?,
-            modeOfAction = ?,
-            recommendedApplication = ?,
-            suitableCrops = ?,
-            features = ?,
-            variants = ?,
-            customSections = ?,
-            image1 = ?,
-            image2 = ?,
-            image3 = ?,
-            image4 = ?
+        UPDATE product_details SET
+            productId = ?, productName = ?, specification = ?, about = ?,
+            keyBenefits = ?, modeOfAction = ?, recommendedApplication = ?,
+            suitableCrops = ?, features = ?, variants = ?, customSections = ?,
+            image1 = ?, image2 = ?, image3 = ?, image4 = ?
         WHERE id = ?
     `;
 
-    db.query(
-        sql, [
-            productId,
-            productName,
-            specification,
-            about,
-            keyBenefits,
-            modeOfAction,
-            recommendedApplication,
-            suitableCrops,
-            features,
-            variants,
-            customSections,
-            image1,
-            image2,
-            image3,
-            image4,
-            req.params.id
-        ],
-        (err) => {
-            if (err) {
-                console.log(err);
-                return res.status(500).json(err);
-            }
-            res.json({ success: true, message: "Updated Successfully" });
+    db.query(sql, [
+        productId, productName, specification, about,
+        keyBenefits, modeOfAction, recommendedApplication,
+        suitableCrops, features, variants, customSections,
+        image1, image2, image3, image4, req.params.id
+    ], (err) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).json(err);
         }
-    );
+        res.json({ success: true, message: "Updated Successfully" });
+    });
 });
 
 // ==================================================
@@ -355,26 +332,14 @@ app.post("/product-details", detailsUpload, (req, res) => {
             keyBenefits, modeOfAction, recommendedApplication,
             suitableCrops, features, variants, customSections,
             image1, image2, image3, image4
-        )
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `;
 
     db.query(sql, [
-        productId,
-        productName,
-        specification,
-        about,
-        keyBenefits,
-        modeOfAction,
-        recommendedApplication,
-        suitableCrops,
-        features,
-        variants,
-        customSections,
-        image1,
-        image2,
-        image3,
-        image4
+        productId, productName, specification, about,
+        keyBenefits, modeOfAction, recommendedApplication,
+        suitableCrops, features, variants, customSections,
+        image1, image2, image3, image4
     ], (err) => {
         if (err) {
             return res.status(500).json({ success: false, message: "Database Error" });
@@ -397,14 +362,12 @@ app.post("/api/orders", (req, res) => {
 
     items.forEach((item) => {
         const subtotal = Number(item.price) * Number(item.qty);
-
         const sql = `
             INSERT INTO orders
                 (farmer_id, name, phone, address, city, pincode, paymentMethod,
                  productName, productImage, variant, price, quantity, subtotal, total)
             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         `;
-
         db.query(sql, [
             farmer_id, name, phone, address, city, pincode, paymentMethod,
             item.name, item.image, item.ml, item.price, item.qty, subtotal, totalPrice
@@ -425,8 +388,7 @@ app.post("/api/orders", (req, res) => {
 // ================= GET ALL ORDERS =================
 // ==================================================
 app.get("/api/orders", (req, res) => {
-    const sql = `SELECT * FROM orders ORDER BY id DESC`;
-    db.query(sql, (err, result) => {
+    db.query("SELECT * FROM orders ORDER BY id DESC", (err, result) => {
         if (err) {
             console.log(err);
             return res.status(500).json({ success: false, message: "Database Error" });
@@ -440,8 +402,7 @@ app.get("/api/orders", (req, res) => {
 // ==================================================
 app.get("/api/orders/:farmer_id", (req, res) => {
     const farmer_id = req.params.farmer_id;
-    const sql = `SELECT * FROM orders WHERE farmer_id = ? ORDER BY id DESC`;
-    db.query(sql, [farmer_id], (err, result) => {
+    db.query("SELECT * FROM orders WHERE farmer_id = ? ORDER BY id DESC", [farmer_id], (err, result) => {
         if (err) {
             console.log(err);
             return res.status(500).json({ success: false, message: "Database Error" });
@@ -506,8 +467,7 @@ app.post("/contact", (req, res) => {
     if (!name || !email || !message) {
         return res.status(400).json({ success: false, message: "All fields are required" });
     }
-    const sql = `INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)`;
-    db.query(sql, [name, email, message], (err) => {
+    db.query("INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)", [name, email, message], (err) => {
         if (err) {
             console.log(err);
             return res.status(500).json({ success: false, message: "Database Error" });
@@ -520,8 +480,7 @@ app.post("/contact", (req, res) => {
 // ============ GET ALL CONTACT MESSAGES ============
 // ==================================================
 app.get("/contact-messages", (req, res) => {
-    const sql = `SELECT * FROM contact_messages ORDER BY id DESC`;
-    db.query(sql, (err, result) => {
+    db.query("SELECT * FROM contact_messages ORDER BY id DESC", (err, result) => {
         if (err) {
             console.log(err);
             return res.status(500).json({ success: false, message: "Database Error" });
@@ -535,8 +494,7 @@ app.get("/contact-messages", (req, res) => {
 // ==================================================
 app.post("/feedback", (req, res) => {
     const { name, phone, rating, feedback } = req.body;
-    const sql = "INSERT INTO feedback(name, phone, rating, feedback) VALUES (?, ?, ?, ?)";
-    db.query(sql, [name, phone, rating, feedback], (err) => {
+    db.query("INSERT INTO feedback(name, phone, rating, feedback) VALUES (?, ?, ?, ?)", [name, phone, rating, feedback], (err) => {
         if (err) {
             console.log("DB Error:", err);
             return res.status(500).json(err);
