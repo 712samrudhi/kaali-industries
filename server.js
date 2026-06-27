@@ -9,6 +9,10 @@ const app = express();
 // ================= CRASH SAFETY NET =================
 process.on("uncaughtException", (err) => {
     console.error("Uncaught Exception:", err.message);
+    if (err.code === "ECONNRESET" || err.message.includes("Connection lost")) {
+        console.log("DB connection issue - continuing...");
+        return;
+    }
 });
 
 process.on("unhandledRejection", (err) => {
@@ -68,9 +72,7 @@ app.post("/admin/login", (req, res) => {
     const { email, password } = req.body;
     const sql = "SELECT * FROM admin WHERE email = ? AND password = ?";
     db.query(sql, [email, password], (err, result) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: "Database Error" });
-        }
+        if (err) return res.status(500).json({ success: false, message: "Database Error" });
         if (result.length > 0) {
             res.json({ success: true, admin: result[0], message: "Login Successful" });
         } else {
@@ -84,11 +86,8 @@ app.post("/admin/login", (req, res) => {
 // ==================================================
 app.post("/register", (req, res) => {
     const { name, email, mobile, address, username, password } = req.body;
-    const sql = `INSERT INTO farmers (name, email, mobile, address, username, password) VALUES (?, ?, ?, ?, ?, ?)`;
-    db.query(sql, [name, email, mobile, address, username, password], (err) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: "Registration Failed" });
-        }
+    db.query(`INSERT INTO farmers (name, email, mobile, address, username, password) VALUES (?, ?, ?, ?, ?, ?)`, [name, email, mobile, address, username, password], (err) => {
+        if (err) return res.status(500).json({ success: false, message: "Registration Failed" });
         res.json({ success: true, message: "Registration Successful" });
     });
 });
@@ -98,15 +97,11 @@ app.post("/register", (req, res) => {
 // ==================================================
 app.post("/login", (req, res) => {
     const { username, password } = req.body;
-    const sql = "SELECT * FROM farmers WHERE username = ? AND password = ?";
-    db.query(sql, [username, password], (err, result) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: "Login Error" });
-        }
+    db.query("SELECT * FROM farmers WHERE username = ? AND password = ?", [username, password], (err, result) => {
+        if (err) return res.status(500).json({ success: false, message: "Login Error" });
         if (result.length > 0) {
             const farmer = result[0];
-            const formattedFarmer = {...farmer, farmer_id: farmer.id };
-            res.json({ success: true, farmer: formattedFarmer, message: "Login Success" });
+            res.json({ success: true, farmer: {...farmer, farmer_id: farmer.id }, message: "Login Success" });
         } else {
             res.status(401).json({ success: false, message: "Invalid Credentials" });
         }
@@ -122,11 +117,8 @@ app.post("/add-product", upload.single("image"), (req, res) => {
     if (!name || !price || !category || !image) {
         return res.status(400).json({ success: false, message: "All fields required" });
     }
-    const sql = `INSERT INTO products (name, price, category, image) VALUES (?, ?, ?, ?)`;
-    db.query(sql, [name, price, category, image], (err) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: "DB Error" });
-        }
+    db.query(`INSERT INTO products (name, price, category, image) VALUES (?, ?, ?, ?)`, [name, price, category, image], (err) => {
+        if (err) return res.status(500).json({ success: false, message: "DB Error" });
         res.json({ success: true, message: "Product Added Successfully" });
     });
 });
@@ -145,28 +137,31 @@ app.get("/api/products", (req, res) => {
 // ================= DELETE PRODUCT ==================
 // ==================================================
 app.delete("/product/:id", (req, res) => {
-    const id = req.params.id;
-    db.query("DELETE FROM products WHERE id = ?", [id], (err) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: "Delete Failed" });
-        }
+    db.query("DELETE FROM products WHERE id = ?", [req.params.id], (err) => {
+        if (err) return res.status(500).json({ success: false, message: "Delete Failed" });
         res.json({ success: true, message: "Product Deleted" });
     });
 });
 
 // ==================================================
-// ================= UPDATE PRODUCT ==================
+// ================= UPDATE PRODUCT (with image) =====
 // ==================================================
-app.put("/product/:id", (req, res) => {
+app.put("/product/:id", upload.single("image"), (req, res) => {
     const id = req.params.id;
     const { name, price, category } = req.body;
-    const sql = `UPDATE products SET name = ?, price = ?, category = ? WHERE id = ?`;
-    db.query(sql, [name, price, category, id], (err) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: "Update Failed" });
-        }
-        res.json({ success: true, message: "Product Updated" });
-    });
+
+    if (req.file) {
+        const image = req.file.filename;
+        db.query(`UPDATE products SET name=?, price=?, category=?, image=? WHERE id=?`, [name, price, category, image, id], (err) => {
+            if (err) return res.status(500).json({ success: false, message: "Update Failed" });
+            res.json({ success: true, message: "Product Updated" });
+        });
+    } else {
+        db.query(`UPDATE products SET name=?, price=?, category=? WHERE id=?`, [name, price, category, id], (err) => {
+            if (err) return res.status(500).json({ success: false, message: "Update Failed" });
+            res.json({ success: true, message: "Product Updated" });
+        });
+    }
 });
 
 // ==================================================
@@ -175,9 +170,7 @@ app.put("/product/:id", (req, res) => {
 app.get("/related-products/:id", (req, res) => {
     const id = req.params.id;
     db.query("SELECT category FROM products WHERE id = ?", [id], (err, result) => {
-        if (err || result.length === 0) {
-            return res.status(500).json({ message: "Error" });
-        }
+        if (err || result.length === 0) return res.status(500).json({ message: "Error" });
         const category = result[0].category;
         db.query("SELECT * FROM products WHERE category = ? AND id != ?", [category, id], (err2, result2) => {
             if (err2) return res.status(500).json({ message: "DB Error" });
@@ -191,23 +184,12 @@ app.get("/related-products/:id", (req, res) => {
 // ==================================================
 app.get("/product-details/:id", (req, res) => {
     const productId = req.params.id;
-    const sql = "SELECT * FROM product_details WHERE productId = ?";
-    db.query(sql, [productId], (err, result) => {
+    db.query("SELECT * FROM product_details WHERE productId = ?", [productId], (err, result) => {
         if (err) return res.status(500).json({ success: false });
-        if (result.length === 0) {
-            return res.status(404).json({ success: false, message: "Not Found" });
-        }
+        if (result.length === 0) return res.status(404).json({ success: false, message: "Not Found" });
         const product = result[0];
-        try {
-            product.variants = JSON.parse(product.variants || "[]");
-        } catch {
-            product.variants = [];
-        }
-        try {
-            product.customSections = JSON.parse(product.customSections || "[]");
-        } catch {
-            product.customSections = [];
-        }
+        try { product.variants = JSON.parse(product.variants || "[]"); } catch { product.variants = []; }
+        try { product.customSections = JSON.parse(product.customSections || "[]"); } catch { product.customSections = []; }
         res.json(product);
     });
 });
@@ -217,20 +199,10 @@ app.get("/product-details/:id", (req, res) => {
 // ==================================================
 app.get("/all-product-details", (req, res) => {
     db.query("SELECT * FROM product_details ORDER BY id DESC", (err, result) => {
-        if (err) {
-            return res.status(500).json(err);
-        }
+        if (err) return res.status(500).json(err);
         const products = result.map(item => {
-            try {
-                item.variants = JSON.parse(item.variants || "[]");
-            } catch {
-                item.variants = [];
-            }
-            try {
-                item.customSections = JSON.parse(item.customSections || "[]");
-            } catch {
-                item.customSections = [];
-            }
+            try { item.variants = JSON.parse(item.variants || "[]"); } catch { item.variants = []; }
+            try { item.customSections = JSON.parse(item.customSections || "[]"); } catch { item.customSections = []; }
             return item;
         });
         res.json(products);
@@ -242,9 +214,7 @@ app.get("/all-product-details", (req, res) => {
 // ==================================================
 app.delete("/product-details/:id", (req, res) => {
     db.query("DELETE FROM product_details WHERE id = ?", [req.params.id], (err) => {
-        if (err) {
-            return res.status(500).json(err);
-        }
+        if (err) return res.status(500).json(err);
         res.json({ success: true, message: "Deleted Successfully" });
     });
 });
@@ -271,59 +241,22 @@ app.put("/product-details/:id", detailsUpload, (req, res) => {
         oldImage4
     } = req.body;
 
-    const image1 = (req.files && req.files.image1 && req.files.image1[0]) ? req.files.image1[0].filename : oldImage1;
-    const image2 = (req.files && req.files.image2 && req.files.image2[0]) ? req.files.image2[0].filename : oldImage2;
-    const image3 = (req.files && req.files.image3 && req.files.image3[0]) ? req.files.image3[0].filename : oldImage3;
-    const image4 = (req.files && req.files.image4 && req.files.image4[0]) ? req.files.image4[0].filename : oldImage4;
+    const image1 = (req.files ? .image1 ? .[0]) ? req.files.image1[0].filename : oldImage1;
+    const image2 = (req.files ? .image2 ? .[0]) ? req.files.image2[0].filename : oldImage2;
+    const image3 = (req.files ? .image3 ? .[0]) ? req.files.image3[0].filename : oldImage3;
+    const image4 = (req.files ? .image4 ? .[0]) ? req.files.image4[0].filename : oldImage4;
 
-    const sql = `
-        UPDATE product_details
-        SET
-            productId = ?,
-            productName = ?,
-            specification = ?,
-            about = ?,
-            keyBenefits = ?,
-            modeOfAction = ?,
-            recommendedApplication = ?,
-            suitableCrops = ?,
-            features = ?,
-            variants = ?,
-            customSections = ?,
-            image1 = ?,
-            image2 = ?,
-            image3 = ?,
-            image4 = ?
-        WHERE id = ?
-    `;
-
-    db.query(
-        sql, [
-            productId,
-            productName,
-            specification,
-            about,
-            keyBenefits,
-            modeOfAction,
-            recommendedApplication,
-            suitableCrops,
-            features,
-            variants,
-            customSections,
-            image1,
-            image2,
-            image3,
-            image4,
-            req.params.id
+    db.query(`UPDATE product_details SET productId=?, productName=?, specification=?, about=?,
+        keyBenefits=?, modeOfAction=?, recommendedApplication=?, suitableCrops=?,
+        features=?, variants=?, customSections=?, image1=?, image2=?, image3=?, image4=?
+        WHERE id=?`, [productId, productName, specification, about, keyBenefits, modeOfAction,
+            recommendedApplication, suitableCrops, features, variants, customSections,
+            image1, image2, image3, image4, req.params.id
         ],
         (err) => {
-            if (err) {
-                console.log(err);
-                return res.status(500).json(err);
-            }
+            if (err) { console.log(err); return res.status(500).json(err); }
             res.json({ success: true, message: "Updated Successfully" });
-        }
-    );
+        });
 });
 
 // ==================================================
@@ -344,80 +277,44 @@ app.post("/product-details", detailsUpload, (req, res) => {
         customSections
     } = req.body;
 
-    const image1 = (req.files && req.files.image1 && req.files.image1[0]) ? req.files.image1[0].filename : null;
-    const image2 = (req.files && req.files.image2 && req.files.image2[0]) ? req.files.image2[0].filename : null;
-    const image3 = (req.files && req.files.image3 && req.files.image3[0]) ? req.files.image3[0].filename : null;
-    const image4 = (req.files && req.files.image4 && req.files.image4[0]) ? req.files.image4[0].filename : null;
+    const image1 = req.files ? .image1 ? .[0] ? req.files.image1[0].filename : null;
+    const image2 = req.files ? .image2 ? .[0] ? req.files.image2[0].filename : null;
+    const image3 = req.files ? .image3 ? .[0] ? req.files.image3[0].filename : null;
+    const image4 = req.files ? .image4 ? .[0] ? req.files.image4[0].filename : null;
 
-    const sql = `
-        INSERT INTO product_details(
-            productId, productName, specification, about,
-            keyBenefits, modeOfAction, recommendedApplication,
-            suitableCrops, features, variants, customSections,
+    db.query(`INSERT INTO product_details(productId, productName, specification, about,
+        keyBenefits, modeOfAction, recommendedApplication, suitableCrops,
+        features, variants, customSections, image1, image2, image3, image4)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, [productId, productName, specification, about, keyBenefits, modeOfAction,
+            recommendedApplication, suitableCrops, features, variants, customSections,
             image1, image2, image3, image4
-        )
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    `;
-
-    db.query(sql, [
-        productId,
-        productName,
-        specification,
-        about,
-        keyBenefits,
-        modeOfAction,
-        recommendedApplication,
-        suitableCrops,
-        features,
-        variants,
-        customSections,
-        image1,
-        image2,
-        image3,
-        image4
-    ], (err) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: "Database Error" });
-        }
-        res.json({ success: true, message: "Saved Successfully" });
-    });
+        ],
+        (err) => {
+            if (err) return res.status(500).json({ success: false, message: "Database Error" });
+            res.json({ success: true, message: "Saved Successfully" });
+        });
 });
 
 // ==================================================
-// ================= SAVE ORDER =================
+// ================= SAVE ORDER =====================
 // ==================================================
 app.post("/api/orders", (req, res) => {
     const { farmer_id, name, phone, address, city, pincode, paymentMethod, items, totalPrice } = req.body;
-
-    if (!items || items.length === 0) {
-        return res.status(400).json({ success: false, message: "No Items Found" });
-    }
+    if (!items || items.length === 0) return res.status(400).json({ success: false, message: "No Items Found" });
 
     let completed = 0;
-
     items.forEach((item) => {
         const subtotal = Number(item.price) * Number(item.qty);
-
-        const sql = `
-            INSERT INTO orders
-                (farmer_id, name, phone, address, city, pincode, paymentMethod,
-                 productName, productImage, variant, price, quantity, subtotal, total)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-        `;
-
-        db.query(sql, [
-            farmer_id, name, phone, address, city, pincode, paymentMethod,
-            item.name, item.image, item.ml, item.price, item.qty, subtotal, totalPrice
-        ], (err) => {
-            if (err) {
-                console.log(err);
-                return res.status(500).json({ success: false, message: "Database Error" });
-            }
-            completed++;
-            if (completed === items.length) {
-                res.json({ success: true, message: "Order Placed Successfully" });
-            }
-        });
+        db.query(`INSERT INTO orders (farmer_id, name, phone, address, city, pincode, paymentMethod,
+            productName, productImage, variant, price, quantity, subtotal, total)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, [farmer_id, name, phone, address, city, pincode, paymentMethod,
+                item.name, item.image, item.ml, item.price, item.qty, subtotal, totalPrice
+            ],
+            (err) => {
+                if (err) { console.log(err); return res.status(500).json({ success: false, message: "Database Error" }); }
+                completed++;
+                if (completed === items.length) res.json({ success: true, message: "Order Placed Successfully" });
+            });
     });
 });
 
@@ -425,75 +322,54 @@ app.post("/api/orders", (req, res) => {
 // ================= GET ALL ORDERS =================
 // ==================================================
 app.get("/api/orders", (req, res) => {
-    const sql = `SELECT * FROM orders ORDER BY id DESC`;
-    db.query(sql, (err, result) => {
-        if (err) {
-            console.log(err);
-            return res.status(500).json({ success: false, message: "Database Error" });
-        }
+    db.query("SELECT * FROM orders ORDER BY id DESC", (err, result) => {
+        if (err) return res.status(500).json({ success: false, message: "Database Error" });
         res.json({ success: true, orders: result });
     });
 });
 
 // ==================================================
-// ================= GET FARMER ORDERS =================
+// ================= GET FARMER ORDERS ==============
 // ==================================================
 app.get("/api/orders/:farmer_id", (req, res) => {
-    const farmer_id = req.params.farmer_id;
-    const sql = `SELECT * FROM orders WHERE farmer_id = ? ORDER BY id DESC`;
-    db.query(sql, [farmer_id], (err, result) => {
-        if (err) {
-            console.log(err);
-            return res.status(500).json({ success: false, message: "Database Error" });
-        }
+    db.query("SELECT * FROM orders WHERE farmer_id = ? ORDER BY id DESC", [req.params.farmer_id], (err, result) => {
+        if (err) return res.status(500).json({ success: false, message: "Database Error" });
         res.json({ success: true, orders: result });
     });
 });
 
 // ==================================================
-// ================= UPDATE ORDER STATUS =================
+// ================= UPDATE ORDER STATUS ============
 // ==================================================
 app.put("/api/orders/:id", (req, res) => {
     const { status } = req.body;
     const id = req.params.id;
-
     let sql = `UPDATE orders SET status = ?`;
     let values = [status];
-
     if (status === "Shipped") sql += `, shipped_date = NOW()`;
     if (status === "Out For Delivery") sql += `, delivery_date = NOW()`;
     if (status === "Delivered") sql += `, delivered_date = NOW()`;
-
     sql += ` WHERE id = ?`;
     values.push(id);
-
     db.query(sql, values, (err) => {
-        if (err) {
-            console.log(err);
-            return res.status(500).json({ success: false, message: "Database Error" });
-        }
+        if (err) return res.status(500).json({ success: false, message: "Database Error" });
         res.json({ success: true, message: "Order Status Updated" });
     });
 });
 
 // ==================================================
-// ================= MANAGE USERS ====================
+// ================= MANAGE USERS ===================
 // ==================================================
 app.get("/users", (req, res) => {
     db.query("SELECT * FROM farmers ORDER BY id DESC", (err, result) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: "Database Error" });
-        }
+        if (err) return res.status(500).json({ success: false, message: "Database Error" });
         res.json(result);
     });
 });
 
 app.delete("/users/:id", (req, res) => {
-    const id = req.params.id;
-    db.query("DELETE FROM farmers WHERE id = ?", [id], (err) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: "Delete Failed" });
-        }
+    db.query("DELETE FROM farmers WHERE id = ?", [req.params.id], (err) => {
+        if (err) return res.status(500).json({ success: false, message: "Delete Failed" });
         res.json({ success: true, message: "User Deleted Successfully" });
     });
 });
@@ -503,15 +379,9 @@ app.delete("/users/:id", (req, res) => {
 // ==================================================
 app.post("/contact", (req, res) => {
     const { name, email, message } = req.body;
-    if (!name || !email || !message) {
-        return res.status(400).json({ success: false, message: "All fields are required" });
-    }
-    const sql = `INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)`;
-    db.query(sql, [name, email, message], (err) => {
-        if (err) {
-            console.log(err);
-            return res.status(500).json({ success: false, message: "Database Error" });
-        }
+    if (!name || !email || !message) return res.status(400).json({ success: false, message: "All fields are required" });
+    db.query("INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)", [name, email, message], (err) => {
+        if (err) return res.status(500).json({ success: false, message: "Database Error" });
         res.json({ success: true, message: "Message Sent Successfully" });
     });
 });
@@ -520,12 +390,8 @@ app.post("/contact", (req, res) => {
 // ============ GET ALL CONTACT MESSAGES ============
 // ==================================================
 app.get("/contact-messages", (req, res) => {
-    const sql = `SELECT * FROM contact_messages ORDER BY id DESC`;
-    db.query(sql, (err, result) => {
-        if (err) {
-            console.log(err);
-            return res.status(500).json({ success: false, message: "Database Error" });
-        }
+    db.query("SELECT * FROM contact_messages ORDER BY id DESC", (err, result) => {
+        if (err) return res.status(500).json({ success: false, message: "Database Error" });
         res.json({ success: true, messages: result });
     });
 });
@@ -535,12 +401,8 @@ app.get("/contact-messages", (req, res) => {
 // ==================================================
 app.post("/feedback", (req, res) => {
     const { name, phone, rating, feedback } = req.body;
-    const sql = "INSERT INTO feedback(name, phone, rating, feedback) VALUES (?, ?, ?, ?)";
-    db.query(sql, [name, phone, rating, feedback], (err) => {
-        if (err) {
-            console.log("DB Error:", err);
-            return res.status(500).json(err);
-        }
+    db.query("INSERT INTO feedback(name, phone, rating, feedback) VALUES (?, ?, ?, ?)", [name, phone, rating, feedback], (err) => {
+        if (err) return res.status(500).json(err);
         res.json({ success: true, message: "Feedback Saved" });
     });
 });
