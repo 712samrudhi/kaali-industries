@@ -19,6 +19,10 @@ function ProductDetails() {
     { ml: "", price: "" }
   ]);
 
+  const [customSections, setCustomSections] = useState([
+    { title: "", description: "" }
+  ]);
+
   const [images, setImages] = useState({
     image1: null,
     image2: null,
@@ -47,16 +51,30 @@ function ProductDetails() {
   };
 
   const addVariant = () => {
-    setVariants([
-      ...variants,
-      { ml: "", price: "" }
-    ]);
+    setVariants([...variants, { ml: "", price: "" }]);
   };
 
   const removeVariant = (index) => {
     const updatedVariants = [...variants];
     updatedVariants.splice(index, 1);
     setVariants(updatedVariants);
+  };
+
+  // ===== Custom Sections Handlers =====
+  const handleSectionChange = (index, e) => {
+    const updated = [...customSections];
+    updated[index][e.target.name] = e.target.value;
+    setCustomSections(updated);
+  };
+
+  const addSection = () => {
+    setCustomSections([...customSections, { title: "", description: "" }]);
+  };
+
+  const removeSection = (index) => {
+    const updated = [...customSections];
+    updated.splice(index, 1);
+    setCustomSections(updated);
   };
 
   const handleSubmit = async (e) => {
@@ -75,41 +93,27 @@ function ProductDetails() {
     data.append("about", formData.about);
     data.append("keyBenefits", formData.keyBenefits);
     data.append("modeOfAction", formData.modeOfAction);
-    data.append(
-      "recommendedApplication",
-      formData.recommendedApplication
-    );
+    data.append("recommendedApplication", formData.recommendedApplication);
     data.append("suitableCrops", formData.suitableCrops);
     data.append("features", formData.features);
 
-    data.append(
-      "variants",
-      JSON.stringify(variants)
+    data.append("variants", JSON.stringify(variants));
+
+    // Only keep sections that have at least a title
+    const filledSections = customSections.filter(
+      (s) => s.title.trim() !== ""
     );
+    data.append("customSections", JSON.stringify(filledSections));
 
-    if (images.image1)
-      data.append("image1", images.image1);
-
-    if (images.image2)
-      data.append("image2", images.image2);
-
-    if (images.image3)
-      data.append("image3", images.image3);
-
-    if (images.image4)
-      data.append("image4", images.image4);
+    if (images.image1) data.append("image1", images.image1);
+    if (images.image2) data.append("image2", images.image2);
+    if (images.image3) data.append("image3", images.image3);
+    if (images.image4) data.append("image4", images.image4);
 
     try {
-      const res = await axios.post(
-        `${BASE_URL}/product-details`,
-        data,
-        {
-          headers: {
-            "Content-Type":
-              "multipart/form-data",
-          },
-        }
-      );
+      const res = await axios.post(`${BASE_URL}/product-details`, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       alert(res.data.message);
 
@@ -125,9 +129,8 @@ function ProductDetails() {
         features: "",
       });
 
-      setVariants([
-        { ml: "", price: "" }
-      ]);
+      setVariants([{ ml: "", price: "" }]);
+      setCustomSections([{ title: "", description: "" }]);
 
       setImages({
         image1: null,
@@ -135,7 +138,6 @@ function ProductDetails() {
         image3: null,
         image4: null,
       });
-
     } catch (err) {
       console.log(err);
       alert("Error Saving Product Details");
@@ -144,12 +146,9 @@ function ProductDetails() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.heading}>
-        Product Details
-      </h2>
+      <h2 style={styles.heading}>Product Details</h2>
 
       <form onSubmit={handleSubmit}>
-
         <input
           type="text"
           name="productId"
@@ -236,89 +235,88 @@ function ProductDetails() {
 
         {variants.map((variant, index) => (
           <div key={index} style={styles.variantRow}>
-
             <input
               type="text"
               name="ml"
               placeholder="ML (Example: 4ml)"
               value={variant.ml}
-              onChange={(e) =>
-                handleVariantChange(index, e)
-              }
+              onChange={(e) => handleVariantChange(index, e)}
               style={styles.variantInput}
             />
-
             <input
               type="number"
               name="price"
               placeholder="Price"
               value={variant.price}
-              onChange={(e) =>
-                handleVariantChange(index, e)
-              }
+              onChange={(e) => handleVariantChange(index, e)}
               style={styles.variantInput}
             />
-
             {variants.length > 1 && (
               <button
                 type="button"
-                onClick={() =>
-                  removeVariant(index)
-                }
+                onClick={() => removeVariant(index)}
                 style={styles.deleteBtn}
               >
                 Delete
               </button>
             )}
-
           </div>
         ))}
 
-        <button
-          type="button"
-          onClick={addVariant}
-          style={styles.addBtn}
-        >
+        <button type="button" onClick={addVariant} style={styles.addBtn}>
           + Add Variant
+        </button>
+
+        {/* ===== NEW: Custom Sections (Dynamic Title + Description) ===== */}
+        <h3>Additional Sections (Optional)</h3>
+        <p style={{ fontSize: "13px", color: "#666", marginTop: "-5px" }}>
+          प्रत्येक product साठी वेगळी माहिती हवी असल्यास इथे स्वतःचा Title (बोल्ड हेडिंग) आणि Description टाका.
+        </p>
+
+        {customSections.map((section, index) => (
+          <div key={index} style={styles.sectionBox}>
+            <input
+              type="text"
+              name="title"
+              placeholder="Section Title (e.g. Storage Instructions)"
+              value={section.title}
+              onChange={(e) => handleSectionChange(index, e)}
+              style={styles.input}
+            />
+            <textarea
+              name="description"
+              placeholder="Description"
+              value={section.description}
+              onChange={(e) => handleSectionChange(index, e)}
+              rows="3"
+              style={styles.textarea}
+            />
+            {customSections.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeSection(index)}
+                style={styles.deleteBtn}
+              >
+                Delete Section
+              </button>
+            )}
+          </div>
+        ))}
+
+        <button type="button" onClick={addSection} style={styles.addBtn}>
+          + Add Section
         </button>
 
         <h3>Product Images (Optional)</h3>
 
-        <input
-          type="file"
-          name="image1"
-          onChange={handleImage}
-          style={styles.input}
-        />
+        <input type="file" name="image1" onChange={handleImage} style={styles.input} />
+        <input type="file" name="image2" onChange={handleImage} style={styles.input} />
+        <input type="file" name="image3" onChange={handleImage} style={styles.input} />
+        <input type="file" name="image4" onChange={handleImage} style={styles.input} />
 
-        <input
-          type="file"
-          name="image2"
-          onChange={handleImage}
-          style={styles.input}
-        />
-
-        <input
-          type="file"
-          name="image3"
-          onChange={handleImage}
-          style={styles.input}
-        />
-
-        <input
-          type="file"
-          name="image4"
-          onChange={handleImage}
-          style={styles.input}
-        />
-
-        <button
-          type="submit"
-          style={styles.saveBtn}
-        >
+        <button type="submit" style={styles.saveBtn}>
           Save Product Details
         </button>
-
       </form>
     </div>
   );
@@ -333,12 +331,7 @@ const styles = {
     borderRadius: "10px",
     boxShadow: "0 0 10px rgba(0,0,0,0.1)",
   },
-
-  heading: {
-    textAlign: "center",
-    marginBottom: "20px",
-  },
-
+  heading: { textAlign: "center", marginBottom: "20px" },
   input: {
     width: "100%",
     padding: "10px",
@@ -346,7 +339,6 @@ const styles = {
     border: "1px solid #ccc",
     borderRadius: "5px",
   },
-
   textarea: {
     width: "100%",
     padding: "10px",
@@ -355,20 +347,20 @@ const styles = {
     borderRadius: "5px",
     resize: "vertical",
   },
-
-  variantRow: {
-    display: "flex",
-    gap: "10px",
-    marginBottom: "10px",
-  },
-
+  variantRow: { display: "flex", gap: "10px", marginBottom: "10px" },
   variantInput: {
     flex: 1,
     padding: "10px",
     border: "1px solid #ccc",
     borderRadius: "5px",
   },
-
+  sectionBox: {
+    border: "1px dashed #999",
+    padding: "15px",
+    borderRadius: "8px",
+    marginBottom: "15px",
+    background: "#fafafa",
+  },
   addBtn: {
     background: "#2196F3",
     color: "#fff",
@@ -378,7 +370,6 @@ const styles = {
     cursor: "pointer",
     marginBottom: "20px",
   },
-
   deleteBtn: {
     background: "#f44336",
     color: "#fff",
@@ -387,7 +378,6 @@ const styles = {
     borderRadius: "5px",
     cursor: "pointer",
   },
-
   saveBtn: {
     width: "100%",
     background: "#4CAF50",

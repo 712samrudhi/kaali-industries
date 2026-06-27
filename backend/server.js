@@ -6,6 +6,15 @@ const path = require("path");
 
 const app = express();
 
+// ================= CRASH SAFETY NET =================
+process.on("uncaughtException", (err) => {
+    console.error("Uncaught Exception:", err.message);
+});
+
+process.on("unhandledRejection", (err) => {
+    console.error("Unhandled Rejection:", err.message);
+});
+
 // ================= MIDDLEWARE =================
 const allowedOrigins = [
     "http://localhost:3000",
@@ -44,6 +53,13 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
+const detailsUpload = upload.fields([
+    { name: "image1", maxCount: 1 },
+    { name: "image2", maxCount: 1 },
+    { name: "image3", maxCount: 1 },
+    { name: "image4", maxCount: 1 }
+]);
 
 // ==================================================
 // ================= ADMIN LOGIN =====================
@@ -187,6 +203,11 @@ app.get("/product-details/:id", (req, res) => {
         } catch {
             product.variants = [];
         }
+        try {
+            product.customSections = JSON.parse(product.customSections || "[]");
+        } catch {
+            product.customSections = [];
+        }
         res.json(product);
     });
 });
@@ -204,6 +225,11 @@ app.get("/all-product-details", (req, res) => {
                 item.variants = JSON.parse(item.variants || "[]");
             } catch {
                 item.variants = [];
+            }
+            try {
+                item.customSections = JSON.parse(item.customSections || "[]");
+            } catch {
+                item.customSections = [];
             }
             return item;
         });
@@ -224,37 +250,132 @@ app.delete("/product-details/:id", (req, res) => {
 });
 
 // ==================================================
-// ========= UPDATE PRODUCT DETAILS =================
+// ========= UPDATE PRODUCT DETAILS (with images) ===
 // ==================================================
-app.put("/product-details/:id", (req, res) => {
-    const { productId, productName, specification, about, keyBenefits, modeOfAction, recommendedApplication, suitableCrops, features, variants } = req.body;
-    const sql = `UPDATE product_details SET productId=?, productName=?, specification=?, about=?, keyBenefits=?, modeOfAction=?, recommendedApplication=?, suitableCrops=?, features=?, variants=? WHERE id=?`;
-    db.query(sql, [productId, productName, specification, about, keyBenefits, modeOfAction, recommendedApplication, suitableCrops, features, JSON.stringify(variants || []), req.params.id], (err) => {
-        if (err) {
-            return res.status(500).json(err);
+app.put("/product-details/:id", detailsUpload, (req, res) => {
+    const {
+        productId,
+        productName,
+        specification,
+        about,
+        keyBenefits,
+        modeOfAction,
+        recommendedApplication,
+        suitableCrops,
+        features,
+        variants,
+        customSections,
+        oldImage1,
+        oldImage2,
+        oldImage3,
+        oldImage4
+    } = req.body;
+
+    const image1 = (req.files && req.files.image1 && req.files.image1[0]) ? req.files.image1[0].filename : oldImage1;
+    const image2 = (req.files && req.files.image2 && req.files.image2[0]) ? req.files.image2[0].filename : oldImage2;
+    const image3 = (req.files && req.files.image3 && req.files.image3[0]) ? req.files.image3[0].filename : oldImage3;
+    const image4 = (req.files && req.files.image4 && req.files.image4[0]) ? req.files.image4[0].filename : oldImage4;
+
+    const sql = `
+        UPDATE product_details
+        SET
+            productId = ?,
+            productName = ?,
+            specification = ?,
+            about = ?,
+            keyBenefits = ?,
+            modeOfAction = ?,
+            recommendedApplication = ?,
+            suitableCrops = ?,
+            features = ?,
+            variants = ?,
+            customSections = ?,
+            image1 = ?,
+            image2 = ?,
+            image3 = ?,
+            image4 = ?
+        WHERE id = ?
+    `;
+
+    db.query(
+        sql, [
+            productId,
+            productName,
+            specification,
+            about,
+            keyBenefits,
+            modeOfAction,
+            recommendedApplication,
+            suitableCrops,
+            features,
+            variants,
+            customSections,
+            image1,
+            image2,
+            image3,
+            image4,
+            req.params.id
+        ],
+        (err) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).json(err);
+            }
+            res.json({ success: true, message: "Updated Successfully" });
         }
-        res.json({ success: true, message: "Updated Successfully" });
-    });
+    );
 });
 
 // ==================================================
 // ============ ADD PRODUCT DETAILS ==================
 // ==================================================
-const detailsUpload = upload.fields([
-    { name: "image1", maxCount: 1 },
-    { name: "image2", maxCount: 1 },
-    { name: "image3", maxCount: 1 },
-    { name: "image4", maxCount: 1 }
-]);
-
 app.post("/product-details", detailsUpload, (req, res) => {
-    const { productId, productName, specification, about, keyBenefits, modeOfAction, recommendedApplication, suitableCrops, features, variants } = req.body;
+    const {
+        productId,
+        productName,
+        specification,
+        about,
+        keyBenefits,
+        modeOfAction,
+        recommendedApplication,
+        suitableCrops,
+        features,
+        variants,
+        customSections
+    } = req.body;
+
     const image1 = (req.files && req.files.image1 && req.files.image1[0]) ? req.files.image1[0].filename : null;
     const image2 = (req.files && req.files.image2 && req.files.image2[0]) ? req.files.image2[0].filename : null;
     const image3 = (req.files && req.files.image3 && req.files.image3[0]) ? req.files.image3[0].filename : null;
     const image4 = (req.files && req.files.image4 && req.files.image4[0]) ? req.files.image4[0].filename : null;
-    const sql = `INSERT INTO product_details(productId, productName, specification, about, keyBenefits, modeOfAction, recommendedApplication, suitableCrops, features, variants, image1, image2, image3, image4) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-    db.query(sql, [productId, productName, specification, about, keyBenefits, modeOfAction, recommendedApplication, suitableCrops, features, variants, image1, image2, image3, image4], (err) => {
+
+    const sql = `
+        INSERT INTO product_details(
+            productId, productName, specification, about,
+            keyBenefits, modeOfAction, recommendedApplication,
+            suitableCrops, features, variants, customSections,
+            image1, image2, image3, image4
+        )
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `;
+
+    db.query(sql, [
+        productId,
+        productName,
+        specification,
+        about,
+        keyBenefits,
+        modeOfAction,
+        recommendedApplication,
+        suitableCrops,
+        features,
+        variants,
+        customSections,
+        image1,
+        image2,
+        image3,
+        image4
+    ], (err) => {
         if (err) {
             return res.status(500).json({ success: false, message: "Database Error" });
         }
@@ -267,14 +388,27 @@ app.post("/product-details", detailsUpload, (req, res) => {
 // ==================================================
 app.post("/api/orders", (req, res) => {
     const { farmer_id, name, phone, address, city, pincode, paymentMethod, items, totalPrice } = req.body;
+
     if (!items || items.length === 0) {
         return res.status(400).json({ success: false, message: "No Items Found" });
     }
+
     let completed = 0;
+
     items.forEach((item) => {
         const subtotal = Number(item.price) * Number(item.qty);
-        const sql = `INSERT INTO orders(farmer_id, name, phone, address, city, pincode, paymentMethod, productName, productImage, variant, price, quantity, subtotal, total) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-        db.query(sql, [farmer_id, name, phone, address, city, pincode, paymentMethod, item.name, item.image, item.ml, item.price, item.qty, subtotal, totalPrice], (err) => {
+
+        const sql = `
+            INSERT INTO orders
+                (farmer_id, name, phone, address, city, pincode, paymentMethod,
+                 productName, productImage, variant, price, quantity, subtotal, total)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        `;
+
+        db.query(sql, [
+            farmer_id, name, phone, address, city, pincode, paymentMethod,
+            item.name, item.image, item.ml, item.price, item.qty, subtotal, totalPrice
+        ], (err) => {
             if (err) {
                 console.log(err);
                 return res.status(500).json({ success: false, message: "Database Error" });
@@ -294,6 +428,7 @@ app.get("/api/orders", (req, res) => {
     const sql = `SELECT * FROM orders ORDER BY id DESC`;
     db.query(sql, (err, result) => {
         if (err) {
+            console.log(err);
             return res.status(500).json({ success: false, message: "Database Error" });
         }
         res.json({ success: true, orders: result });
@@ -308,6 +443,7 @@ app.get("/api/orders/:farmer_id", (req, res) => {
     const sql = `SELECT * FROM orders WHERE farmer_id = ? ORDER BY id DESC`;
     db.query(sql, [farmer_id], (err, result) => {
         if (err) {
+            console.log(err);
             return res.status(500).json({ success: false, message: "Database Error" });
         }
         res.json({ success: true, orders: result });
@@ -320,15 +456,20 @@ app.get("/api/orders/:farmer_id", (req, res) => {
 app.put("/api/orders/:id", (req, res) => {
     const { status } = req.body;
     const id = req.params.id;
+
     let sql = `UPDATE orders SET status = ?`;
     let values = [status];
+
     if (status === "Shipped") sql += `, shipped_date = NOW()`;
     if (status === "Out For Delivery") sql += `, delivery_date = NOW()`;
     if (status === "Delivered") sql += `, delivered_date = NOW()`;
+
     sql += ` WHERE id = ?`;
     values.push(id);
+
     db.query(sql, values, (err) => {
         if (err) {
+            console.log(err);
             return res.status(500).json({ success: false, message: "Database Error" });
         }
         res.json({ success: true, message: "Order Status Updated" });
@@ -365,9 +506,10 @@ app.post("/contact", (req, res) => {
     if (!name || !email || !message) {
         return res.status(400).json({ success: false, message: "All fields are required" });
     }
-    const sql = `INSERT INTO contact_messages(name, email, message) VALUES (?, ?, ?)`;
+    const sql = `INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)`;
     db.query(sql, [name, email, message], (err) => {
         if (err) {
+            console.log(err);
             return res.status(500).json({ success: false, message: "Database Error" });
         }
         res.json({ success: true, message: "Message Sent Successfully" });
@@ -381,6 +523,7 @@ app.get("/contact-messages", (req, res) => {
     const sql = `SELECT * FROM contact_messages ORDER BY id DESC`;
     db.query(sql, (err, result) => {
         if (err) {
+            console.log(err);
             return res.status(500).json({ success: false, message: "Database Error" });
         }
         res.json({ success: true, messages: result });
@@ -395,6 +538,7 @@ app.post("/feedback", (req, res) => {
     const sql = "INSERT INTO feedback(name, phone, rating, feedback) VALUES (?, ?, ?, ?)";
     db.query(sql, [name, phone, rating, feedback], (err) => {
         if (err) {
+            console.log("DB Error:", err);
             return res.status(500).json(err);
         }
         res.json({ success: true, message: "Feedback Saved" });
@@ -405,7 +549,7 @@ app.post("/feedback", (req, res) => {
 // ================= TEST ROUTE =====================
 // ==================================================
 app.get("/test", (req, res) => {
-    res.json({ message: "Backend Working ✅" });
+    res.json({ message: "Backend Working" });
 });
 
 // ==================================================

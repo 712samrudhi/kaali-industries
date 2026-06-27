@@ -23,11 +23,18 @@ function ProductDetailPage() {
     axios.get(`${BASE_URL}/product-details/${id}`)
       .then((res) => {
         let data = res.data;
+
         try {
           data.variants = typeof data.variants === "string"
             ? JSON.parse(data.variants)
             : data.variants || [];
         } catch { data.variants = []; }
+
+        try {
+          data.customSections = typeof data.customSections === "string"
+            ? JSON.parse(data.customSections)
+            : data.customSections || [];
+        } catch { data.customSections = []; }
 
         setProduct(data);
         if (data.variants.length > 0) setSelectedVariant(data.variants[0]);
@@ -110,26 +117,64 @@ function ProductDetailPage() {
           <h1 style={{ marginTop: 0 }}>{product.productName}</h1>
           <h2 style={{ color: "green" }}>₹ {selectedVariant?.price || product.price}</h2>
 
-          <h3>About Product</h3>
-          <p>{product.about}</p>
+          {product.about && (
+            <>
+              <h3>About Product</h3>
+              <p>{product.about}</p>
+            </>
+          )}
 
-          <h3>Specification</h3>
-          <p>{product.specification}</p>
+          {product.specification && (
+            <>
+              <h3>Specification</h3>
+              <p>{product.specification}</p>
+            </>
+          )}
 
-          <h3>Key Benefits</h3>
-          <p>{product.keyBenefits}</p>
+          {product.keyBenefits && (
+            <>
+              <h3>Key Benefits</h3>
+              <p>{product.keyBenefits}</p>
+            </>
+          )}
 
-          <h3>Mode Of Action</h3>
-          <p>{product.modeOfAction}</p>
+          {product.modeOfAction && (
+            <>
+              <h3>Mode Of Action</h3>
+              <p>{product.modeOfAction}</p>
+            </>
+          )}
 
-          <h3>Recommended Application</h3>
-          <p>{product.recommendedApplication}</p>
+          {product.recommendedApplication && (
+            <>
+              <h3>Recommended Application</h3>
+              <p>{product.recommendedApplication}</p>
+            </>
+          )}
 
-          <h3>Suitable Crops</h3>
-          <p>{product.suitableCrops}</p>
+          {product.suitableCrops && (
+            <>
+              <h3>Suitable Crops</h3>
+              <p>{product.suitableCrops}</p>
+            </>
+          )}
 
-          <h3>Features</h3>
-          <p>{product.features}</p>
+          {product.features && (
+            <>
+              <h3>Features</h3>
+              <p>{product.features}</p>
+            </>
+          )}
+
+          {/* ===== NEW: Custom Sections (Dynamic Title + Description) ===== */}
+          {product.customSections && product.customSections.length > 0 &&
+            product.customSections.map((sec, idx) => (
+              <div key={idx}>
+                <h3>{sec.title}</h3>
+                <p>{sec.description}</p>
+              </div>
+            ))
+          }
 
           {product.variants?.length > 0 && (
             <>
