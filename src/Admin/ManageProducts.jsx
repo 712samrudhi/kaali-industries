@@ -8,6 +8,7 @@ function ManageProducts() {
   const [form, setForm] = useState({ name: "", price: "", category: "" });
   const [newImage, setNewImage] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [oldImage, setOldImage] = useState(null);
 
   useEffect(() => { getProducts(); }, []);
 
@@ -34,6 +35,7 @@ function ManageProducts() {
   const editProduct = (product) => {
     setEditId(product.id);
     setForm({ name: product.name, price: product.price, category: product.category });
+    setOldImage(product.image);
     setPreview(`${BASE_URL}/uploads/${product.image}`);
     setNewImage(null);
   };
@@ -44,16 +46,23 @@ function ManageProducts() {
       formData.append("name", form.name);
       formData.append("price", form.price);
       formData.append("category", form.category);
-      if (newImage) formData.append("image", newImage);
+      if (newImage) {
+        formData.append("image", newImage);
+      }
 
-      await axios.put(`${BASE_URL}/product/${editId}`, formData);
-      alert("Product Updated");
+      await axios.put(`${BASE_URL}/product/${editId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+
+      alert("Product Updated ✅");
       setEditId(null);
       setForm({ name: "", price: "", category: "" });
       setNewImage(null);
       setPreview(null);
+      setOldImage(null);
       getProducts();
     } catch (error) {
+      console.log(error);
       alert("Update Failed");
     }
   };
@@ -66,29 +75,52 @@ function ManageProducts() {
         <div style={{ border: "1px solid #ddd", padding: "20px", marginBottom: "30px", borderRadius: "10px" }}>
           <h3>Edit Product</h3>
 
-          {preview && (
-            <img src={preview} alt="preview" style={{ width: "150px", height: "150px", objectFit: "cover", borderRadius: "10px", marginBottom: "10px" }} />
-          )}
+          {/* Image Preview */}
+          <div style={{ marginBottom: "15px" }}>
+            <p style={{ marginBottom: "5px", fontWeight: "bold" }}>Current Image:</p>
+            <img
+              src={preview}
+              alt="preview"
+              style={{ width: "150px", height: "150px", objectFit: "cover", borderRadius: "10px", border: "2px solid #ddd" }}
+              onError={(e) => e.target.style.display = "none"}
+            />
+          </div>
 
-          <input type="file" accept="image/*"
-            onChange={(e) => {
-              setNewImage(e.target.files[0]);
-              setPreview(URL.createObjectURL(e.target.files[0]));
-            }}
-            style={{ width: "100%", marginBottom: "10px" }}
-          />
+          {/* Image Upload */}
+          <div style={{ marginBottom: "10px" }}>
+            <p style={{ marginBottom: "5px", fontWeight: "bold" }}>Change Image (optional):</p>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  setNewImage(file);
+                  setPreview(URL.createObjectURL(file));
+                }
+              }}
+              style={{ width: "100%", padding: "5px" }}
+            />
+          </div>
 
-          <input type="text" placeholder="Product Name" value={form.name}
+          <input
+            type="text"
+            placeholder="Product Name"
+            value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
           />
 
-          <input type="number" placeholder="Price" value={form.price}
+          <input
+            type="number"
+            placeholder="Price"
+            value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
             style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
           />
 
-          <select value={form.category}
+          <select
+            value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
             style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
           >
@@ -98,10 +130,18 @@ function ManageProducts() {
             <option value="vegetable">Vegetable</option>
           </select>
 
-          <button onClick={updateProduct}
-            style={{ background: "#16a34a", color: "#fff", border: "none", padding: "10px 20px", cursor: "pointer", borderRadius: "5px" }}
+          <button
+            onClick={updateProduct}
+            style={{ background: "#16a34a", color: "#fff", border: "none", padding: "10px 20px", cursor: "pointer", borderRadius: "5px", marginRight: "10px" }}
           >
-            Update Product
+            Update Product ✅
+          </button>
+
+          <button
+            onClick={() => { setEditId(null); setPreview(null); setNewImage(null); }}
+            style={{ background: "#dc2626", color: "#fff", border: "none", padding: "10px 20px", cursor: "pointer", borderRadius: "5px" }}
+          >
+            Cancel ❌
           </button>
         </div>
       )}
@@ -109,16 +149,20 @@ function ManageProducts() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: "20px" }}>
         {products.map((p) => (
           <div key={p.id} style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "15px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
-            <img src={`${BASE_URL}/uploads/${p.image}`} alt={p.name}
+            <img
+              src={`${BASE_URL}/uploads/${p.image}`}
+              alt={p.name}
               style={{ width: "100%", height: "220px", objectFit: "cover", borderRadius: "10px" }}
             />
             <h3>{p.name}</h3>
             <p><b>₹ {p.price}</b></p>
             <p>Category: {p.category}</p>
-            <button onClick={() => editProduct(p)}
+            <button
+              onClick={() => editProduct(p)}
               style={{ background: "#2563eb", color: "#fff", border: "none", padding: "10px", marginRight: "10px", cursor: "pointer", borderRadius: "5px" }}
             >Edit</button>
-            <button onClick={() => deleteProduct(p.id)}
+            <button
+              onClick={() => deleteProduct(p.id)}
               style={{ background: "#dc2626", color: "#fff", border: "none", padding: "10px", cursor: "pointer", borderRadius: "5px" }}
             >Delete</button>
           </div>
