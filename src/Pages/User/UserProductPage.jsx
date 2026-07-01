@@ -60,8 +60,8 @@ function UserProductPage() {
               filtered.map((item) => (
                 <div key={item.id} style={{ background: "#fff", borderRadius: "12px", overflow: "hidden", boxShadow: "0 3px 10px rgba(0,0,0,0.1)" }}>
                   <div style={{ height: "250px", display: "flex", justifyContent: "center", alignItems: "center", padding: "15px" }}>
-                    <img src={item.image ? `${BASE_URL}/uploads/${item.image}` : "https://via.placeholder.com/300"} alt={item.name}
-                      onError={(e) => { e.target.src = "https://via.placeholder.com/300"; }}
+                    <img src={item.image ? `${BASE_URL}/uploads/${item.image}` : "/no-image.png"} alt={item.name}
+                      onError={(e) => { e.target.onerror = null; e.target.src = "/no-image.png"; }}
                       style={{ width: "100%", height: "220px", objectFit: "contain" }} />
                   </div>
                   <div style={{ padding: "15px" }}>
