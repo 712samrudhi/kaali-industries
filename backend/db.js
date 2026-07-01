@@ -10,7 +10,10 @@ const db = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0,
     enableKeepAlive: true,
-    keepAliveInitialDelay: 0
+    keepAliveInitialDelay: 0,
+    connectTimeout: 60000,
+    acquireTimeout: 60000,
+    timeout: 60000
 });
 
 db.getConnection((err, connection) => {
@@ -21,5 +24,13 @@ db.getConnection((err, connection) => {
         connection.release();
     }
 });
+
+setInterval(() => {
+    db.query("SELECT 1", (err) => {
+        if (err) {
+            console.log("Keep-alive failed:", err.message);
+        }
+    });
+}, 30000);
 
 module.exports = db;
