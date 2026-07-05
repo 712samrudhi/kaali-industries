@@ -3,6 +3,10 @@ import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import BASE_URL from "../../config";
 
+// Inline placeholder — no network request, so it can never 404/422
+const FALLBACK_IMG =
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMjAiIGhlaWdodD0iMjIwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZWVlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=";
+
 function UserProductPage() {
   const [products, setProducts] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -11,7 +15,7 @@ function UserProductPage() {
   const location = useLocation();
   const isUser = location.pathname.startsWith("/user");
 
-  const categories = ["All", "Fertilizer", "Biostimulant", "Seeds", "Pesticides", "Herbicide", "Fungicide", "PGR"];
+  const categories = ["All", "Fertilizer", "Seed", "Food", "Vegetable", "Fruit", "Grains"];
 
   useEffect(() => {
     axios.get(`${BASE_URL}/api/products`)
@@ -60,9 +64,12 @@ function UserProductPage() {
               filtered.map((item) => (
                 <div key={item.id} style={{ background: "#fff", borderRadius: "12px", overflow: "hidden", boxShadow: "0 3px 10px rgba(0,0,0,0.1)" }}>
                   <div style={{ height: "250px", display: "flex", justifyContent: "center", alignItems: "center", padding: "15px" }}>
-                    <img src={item.image ? `${BASE_URL}/uploads/${item.image}` : "https://via.placeholder.com/300"} alt={item.name}
-                      onError={(e) => { e.target.src = "https://via.placeholder.com/300"; }}
-                      style={{ width: "100%", height: "220px", objectFit: "contain" }} />
+                    <img
+                      src={item.image ? `${BASE_URL}/uploads/${item.image}` : FALLBACK_IMG}
+                      alt={item.name}
+                      onError={(e) => { e.target.onerror = null; e.target.src = FALLBACK_IMG; }}
+                      style={{ width: "100%", height: "220px", objectFit: "contain" }}
+                    />
                   </div>
                   <div style={{ padding: "15px" }}>
                     <h3>{item.name}</h3>
