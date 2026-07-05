@@ -219,7 +219,6 @@ function Navbar() {
           <Link to="/about">About</Link>
           <Link to="/products">Products</Link>
           <Link to="/services">Services</Link>
-          <Link to="/feedback">Farmer Feedback</Link>
         </div>
 
         <div className="right-section">
