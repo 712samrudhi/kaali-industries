@@ -40,7 +40,7 @@ function AddProduct() {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${BASE_URL}/api/add-product`, formData, {
+      const res = await axios.post(`${BASE_URL}/add-product`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -54,7 +54,7 @@ function AddProduct() {
         category: "",
       });
       setImage(null);
-      e.target.reset(); // file input clear करण्यासाठी
+      e.target.reset();
     } catch (err) {
       console.log(err.response?.data || err.message);
       const msg =
