@@ -3,19 +3,19 @@ import axios from "axios";
 import BASE_URL from "../config";
 
 function AddProduct() {
-
   const [product, setProduct] = useState({
     name: "",
     price: "",
-    category: ""
+    category: "",
   });
 
   const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setProduct({
       ...product,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -26,31 +26,44 @@ function AddProduct() {
   const addProduct = async (e) => {
     e.preventDefault();
 
+    if (!image) {
+      alert("कृपया product image निवडा");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("name", product.name);
+    formData.append("name", product.name.trim());
     formData.append("price", product.price);
     formData.append("category", product.category);
     formData.append("image", image);
 
-    try {
-      const res = await axios.post(
-        `${BASE_URL}/add-product`,
-        formData
-      );
+    setLoading(true);
 
-      alert(res.data.message);
+    try {
+      const res = await axios.post(`${BASE_URL}/api/add-product`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      alert(res.data?.message || "Product Added Successfully");
 
       setProduct({
         name: "",
         price: "",
-        category: ""
+        category: "",
       });
-
       setImage(null);
-
+      e.target.reset(); // file input clear करण्यासाठी
     } catch (err) {
       console.log(err.response?.data || err.message);
-      alert("Error Adding Product");
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Error Adding Product. सर्व्हर तपासा किंवा पुन्हा प्रयत्न करा.";
+      alert(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,7 +72,6 @@ function AddProduct() {
       <h2>Add Product</h2>
 
       <form onSubmit={addProduct}>
-
         <input
           type="text"
           name="name"
@@ -68,7 +80,8 @@ function AddProduct() {
           onChange={handleChange}
           required
         />
-        <br /><br />
+        <br />
+        <br />
 
         <input
           type="number"
@@ -76,9 +89,12 @@ function AddProduct() {
           placeholder="Price"
           value={product.price}
           onChange={handleChange}
+          min="0"
+          step="0.01"
           required
         />
-        <br /><br />
+        <br />
+        <br />
 
         <select
           name="category"
@@ -87,22 +103,26 @@ function AddProduct() {
           required
         >
           <option value="">Select Category</option>
-          <option value="fertilizer">Fertilizer</option>
-          <option value="seed">Seed</option>
-          <option value="food">Food</option>
-          <option value="vegetable">Vegetable</option>
+          <option value="Fertilizer">Fertilizer</option>
+          <option value="Biostimulant">Biostimulant</option>
+          <option value="Seeds">Seeds</option>
+          <option value="Pesticides">Pesticides</option>
+          <option value="Herbicide">Herbicide</option>
+          <option value="Fungicide">Fungicide</option>
+          <option value="PGR">PGR</option>
         </select>
 
-        <br /><br />
+        <br />
+        <br />
 
-        <input type="file" onChange={handleImage} required />
+        <input type="file" accept="image/*" onChange={handleImage} required />
 
-        <br /><br />
+        <br />
+        <br />
 
-        <button type="submit">
-          Add Product
+        <button type="submit" disabled={loading}>
+          {loading ? "Adding..." : "Add Product"}
         </button>
-
       </form>
     </div>
   );
