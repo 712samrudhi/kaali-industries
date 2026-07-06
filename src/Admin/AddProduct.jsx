@@ -40,7 +40,7 @@ function AddProduct() {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${BASE_URL}/add-product`, formData, {
+      const res = await axios.post(`${BASE_URL}/api/add-product`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
