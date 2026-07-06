@@ -3,8 +3,15 @@ const cors = require("cors");
 const db = require("./db");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
+
+// ================= UPLOADS FOLDER CHECK =================
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // ================= CRASH SAFETY NET =================
 process.on("uncaughtException", (err) => {
@@ -39,6 +46,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // ================= STATIC IMAGES =================
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -111,14 +119,17 @@ app.post("/login", (req, res) => {
 // ==================================================
 // ================= ADD PRODUCT =====================
 // ==================================================
-app.post("/add-product", upload.single("image"), (req, res) => {
+app.post("/api/add-product", upload.single("image"), (req, res) => {
     const { name, price, category } = req.body;
     const image = req.file ? req.file.filename : null;
     if (!name || !price || !category || !image) {
         return res.status(400).json({ success: false, message: "All fields required" });
     }
     db.query(`INSERT INTO products (name, price, category, image) VALUES (?, ?, ?, ?)`, [name, price, category, image], (err) => {
-        if (err) return res.status(500).json({ success: false, message: "DB Error" });
+        if (err) {
+            console.log(err);
+            return res.status(500).json({ success: false, message: "DB Error" });
+        }
         res.json({ success: true, message: "Product Added Successfully" });
     });
 });
@@ -241,10 +252,10 @@ app.put("/product-details/:id", detailsUpload, (req, res) => {
         oldImage4
     } = req.body;
 
-    const image1 = (req.files ? .image1 ? .[0]) ? req.files.image1[0].filename : oldImage1;
-    const image2 = (req.files ? .image2 ? .[0]) ? req.files.image2[0].filename : oldImage2;
-    const image3 = (req.files ? .image3 ? .[0]) ? req.files.image3[0].filename : oldImage3;
-    const image4 = (req.files ? .image4 ? .[0]) ? req.files.image4[0].filename : oldImage4;
+    const image1 = (req.files && req.files.image1) ? req.files.image1[0].filename : oldImage1;
+    const image2 = (req.files && req.files.image2) ? req.files.image2[0].filename : oldImage2;
+    const image3 = (req.files && req.files.image3) ? req.files.image3[0].filename : oldImage3;
+    const image4 = (req.files && req.files.image4) ? req.files.image4[0].filename : oldImage4;
 
     db.query(`UPDATE product_details SET productId=?, productName=?, specification=?, about=?,
         keyBenefits=?, modeOfAction=?, recommendedApplication=?, suitableCrops=?,
@@ -277,10 +288,10 @@ app.post("/product-details", detailsUpload, (req, res) => {
         customSections
     } = req.body;
 
-    const image1 = req.files ? .image1 ? .[0] ? req.files.image1[0].filename : null;
-    const image2 = req.files ? .image2 ? .[0] ? req.files.image2[0].filename : null;
-    const image3 = req.files ? .image3 ? .[0] ? req.files.image3[0].filename : null;
-    const image4 = req.files ? .image4 ? .[0] ? req.files.image4[0].filename : null;
+    const image1 = (req.files && req.files.image1) ? req.files.image1[0].filename : null;
+    const image2 = (req.files && req.files.image2) ? req.files.image2[0].filename : null;
+    const image3 = (req.files && req.files.image3) ? req.files.image3[0].filename : null;
+    const image4 = (req.files && req.files.image4) ? req.files.image4[0].filename : null;
 
     db.query(`INSERT INTO product_details(productId, productName, specification, about,
         keyBenefits, modeOfAction, recommendedApplication, suitableCrops,
@@ -303,6 +314,7 @@ app.post("/api/orders", (req, res) => {
     if (!items || items.length === 0) return res.status(400).json({ success: false, message: "No Items Found" });
 
     let completed = 0;
+    let failed = false;
     items.forEach((item) => {
         const subtotal = Number(item.price) * Number(item.qty);
         db.query(`INSERT INTO orders (farmer_id, name, phone, address, city, pincode, paymentMethod,
@@ -311,9 +323,18 @@ app.post("/api/orders", (req, res) => {
                 item.name, item.image, item.ml, item.price, item.qty, subtotal, totalPrice
             ],
             (err) => {
-                if (err) { console.log(err); return res.status(500).json({ success: false, message: "Database Error" }); }
+                if (err) {
+                    console.log(err);
+                    if (!failed) {
+                        failed = true;
+                        return res.status(500).json({ success: false, message: "Database Error" });
+                    }
+                    return;
+                }
                 completed++;
-                if (completed === items.length) res.json({ success: true, message: "Order Placed Successfully" });
+                if (completed === items.length && !failed) {
+                    res.json({ success: true, message: "Order Placed Successfully" });
+                }
             });
     });
 });

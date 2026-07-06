@@ -119,7 +119,7 @@ app.post("/login", (req, res) => {
 // ==================================================
 // ================= ADD PRODUCT =====================
 // ==================================================
-app.post("/add-product", upload.single("image"), (req, res) => {
+app.post("/api/add-product", upload.single("image"), (req, res) => {
     const { name, price, category } = req.body;
     const image = req.file ? req.file.filename : null;
     if (!name || !price || !category || !image) {
