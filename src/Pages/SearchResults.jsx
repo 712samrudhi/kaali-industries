@@ -96,14 +96,6 @@ function SearchResults() {
 
   return (
     <div style={{ background: "#f5f5f5", minHeight: "100vh", padding: "30px" }}>
-      <h1 style={{ textAlign: "center", color: "#2e7d32", marginBottom: "10px" }}>
-        Search Results
-      </h1>
-
-      <p style={{ textAlign: "center", color: "#666", marginBottom: "35px" }}>
-        Showing results for: <b>"{query}"</b>
-      </p>
-
       <div
         style={{
           display: "grid",
