@@ -10,6 +10,15 @@ import {
   FaTimes
 } from "react-icons/fa";
 
+const pageRoutes = {
+  home: "/user",
+  about: "/user/about",
+  products: "/user/products",
+  services: "/user/services",
+  feedback: "/user/feedback",
+  contact: "/user/contact",
+};
+
 function UserNavbar(){
 
 const [open,setOpen]=useState(false);
@@ -36,8 +45,14 @@ navigate("/login");
 };
 
 const handleSearch=()=>{
-  if(searchQuery.trim()==="") return;
-  navigate(`/user/search?query=${encodeURIComponent(searchQuery)}`);
+  const q = searchQuery.trim().toLowerCase();
+  if(q === "") return;
+
+  if(pageRoutes[q]){
+    navigate(pageRoutes[q]);
+  } else {
+    navigate(`/user/search?query=${encodeURIComponent(searchQuery)}`);
+  }
   setSearchQuery("");
 };
 

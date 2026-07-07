@@ -2,14 +2,28 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaSearch, FaBars, FaTimes } from "react-icons/fa";
 
+const pageRoutes = {
+  home: "/",
+  about: "/about",
+  products: "/products",
+  services: "/services",
+  contact: "/contact",
+};
+
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   const handleSearch = () => {
-    if (searchQuery.trim() === "") return;
-    navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
+    const q = searchQuery.trim().toLowerCase();
+    if (q === "") return;
+
+    if (pageRoutes[q]) {
+      navigate(pageRoutes[q]);
+    } else {
+      navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
+    }
     setSearchQuery("");
   };
 
