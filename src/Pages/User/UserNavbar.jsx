@@ -14,6 +14,7 @@ function UserNavbar(){
 
 const [open,setOpen]=useState(false);
 const [menuOpen,setMenuOpen]=useState(false);
+const [searchQuery,setSearchQuery]=useState("");
 
 const navigate=useNavigate();
 
@@ -32,6 +33,18 @@ const handleLogout=()=>{
 localStorage.removeItem("farmer");
 navigate("/login");
 
+};
+
+const handleSearch=()=>{
+  if(searchQuery.trim()==="") return;
+  navigate(`/user/search?query=${encodeURIComponent(searchQuery)}`);
+  setSearchQuery("");
+};
+
+const handleKeyDown=(e)=>{
+  if(e.key==="Enter"){
+    handleSearch();
+  }
 };
 
 
@@ -213,6 +226,7 @@ position:absolute;
 right:15px;
 top:12px;
 color:#16a34a;
+cursor:pointer;
 
 }
 
@@ -592,10 +606,15 @@ Feedback
 <div className="search">
 
 
-<input placeholder="Search here..." />
+<input
+  placeholder="Search here..."
+  value={searchQuery}
+  onChange={(e)=>setSearchQuery(e.target.value)}
+  onKeyDown={handleKeyDown}
+/>
 
 
-<FaSearch/>
+<FaSearch onClick={handleSearch}/>
 
 
 </div>

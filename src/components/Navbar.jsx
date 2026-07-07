@@ -1,9 +1,23 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaSearch, FaBars, FaTimes } from "react-icons/fa";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearch = () => {
+    if (searchQuery.trim() === "") return;
+    navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
+    setSearchQuery("");
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
 
   return (
     <>
@@ -227,8 +241,11 @@ function Navbar() {
             <input
               type="text"
               placeholder="Search here..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
             />
-            <button className="search-btn">
+            <button className="search-btn" onClick={handleSearch}>
               <FaSearch />
             </button>
           </div>
