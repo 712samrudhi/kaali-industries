@@ -29,6 +29,7 @@ import About from "./Pages/About";
 import FarmerFeedback from "./Pages/FarmerFeedback";
 import LoginRegister from "./Pages/LoginRegister";
 import ProductDetailPage from "./Pages/ProductDetailPage";
+import SearchResults from "./Pages/SearchResults";
 
 
 
@@ -299,6 +300,33 @@ element={
 </>
 }
 
+/>
+
+
+
+
+{/* SEARCH */}
+
+<Route
+  path="/search"
+  element={
+    <>
+      <Navbar/>
+      <SearchResults/>
+      <Footer/>
+    </>
+  }
+/>
+
+<Route
+  path="/user/search"
+  element={
+    <>
+      <UserNavbar/>
+      <SearchResults/>
+      <Footer/>
+    </>
+  }
 />
 
 
