@@ -3,6 +3,9 @@ import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import BASE_URL from "../../config";
 
+const FALLBACK_IMAGE =
+  "data:image/svg+xml;charset=UTF-8,%3Csvg width='300' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23e0e0e0'/%3E%3Ctext x='50%25' y='50%25' font-size='18' fill='%23999' font-family='Arial' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+
 function UserProductPage() {
   const [products, setProducts] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -68,7 +71,7 @@ function UserProductPage() {
   };
 
   const getImageSrc = (image) => {
-    if (!image) return "https://via.placeholder.com/300";
+    if (!image) return FALLBACK_IMAGE;
     if (image.startsWith("http")) return image;
     return `${BASE_URL}/uploads/${image}`;
   };
@@ -150,7 +153,7 @@ function UserProductPage() {
                         alt={item.name}
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = "https://via.placeholder.com/300";
+                          e.target.src = FALLBACK_IMAGE;
                         }}
                         style={{ width: "100%", height: "220px", objectFit: "contain" }}
                       />
