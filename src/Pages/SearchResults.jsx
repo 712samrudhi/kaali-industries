@@ -40,9 +40,8 @@ function SearchResults() {
     return name.includes(q) || category.includes(q);
   });
 
-  // जर तंतोतंत जुळणारं काही नसेल, तर सर्व products "related" म्हणून दाखवा
-  const showingRelated = exactMatches.length === 0;
-  const displayItems = showingRelated ? products : exactMatches;
+  // जर तंतोतंत जुळणारं काही नसेल, तर सर्व products दाखवा
+  const displayItems = exactMatches.length === 0 ? products : exactMatches;
 
   const getImageSrc = (image) => {
     if (!image) return FALLBACK_IMAGE;
@@ -100,13 +99,6 @@ function SearchResults() {
 
   return (
     <div style={{ background: "#f5f5f5", minHeight: "100vh", padding: "30px" }}>
-
-      {showingRelated && (
-        <p style={{ textAlign: "center", color: "#666", marginBottom: "25px" }}>
-          "{query}" शी तंतोतंत जुळणारं सापडलं नाही — तुम्हाला हे आवडू शकतील:
-        </p>
-      )}
-
       <div
         style={{
           display: "grid",
