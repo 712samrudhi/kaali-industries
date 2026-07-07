@@ -20,7 +20,6 @@ function SearchResults() {
     axios
       .get(`${BASE_URL}/api/products`)
       .then((res) => {
-        console.log("Products from API:", res.data); // 👈 तात्पुरतं debug साठी
         setProducts(res.data || []);
         setError(false);
       })
@@ -30,10 +29,6 @@ function SearchResults() {
       })
       .finally(() => setLoading(false));
   }, []);
-
-  useEffect(() => {
-    console.log("Search query is:", query); // 👈 तात्पुरतं debug साठी
-  }, [query]);
 
   const filteredItems = products.filter((item) => {
     const name = item.name ? item.name.toLowerCase() : "";
@@ -90,7 +85,7 @@ function SearchResults() {
         <h2 style={{ textAlign: "center", color: "red" }}>
           Products load होत नाहीत. सर्व्हर तपासा किंवा नंतर प्रयत्न करा.
         </h2>
-      ) : (
+      ) : filteredItems.length > 0 ? (
         <div
           style={{
             display: "grid",
@@ -98,86 +93,80 @@ function SearchResults() {
             gap: "25px",
           }}
         >
-          {filteredItems.length > 0 ? (
-            filteredItems.map((item) => (
+          {filteredItems.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                background: "#fff",
+                borderRadius: "12px",
+                overflow: "hidden",
+                boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
+              }}
+            >
               <div
-                key={item.id}
                 style={{
-                  background: "#fff",
-                  borderRadius: "12px",
-                  overflow: "hidden",
-                  boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
+                  height: "250px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: "15px",
                 }}
               >
-                <div
-                  style={{
-                    height: "250px",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    padding: "15px",
+                <img
+                  src={getImageSrc(item.image)}
+                  alt={item.name}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "https://via.placeholder.com/300";
                   }}
-                >
-                  <img
-                    src={getImageSrc(item.image)}
-                    alt={item.name}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "https://via.placeholder.com/300";
+                  style={{ width: "100%", height: "220px", objectFit: "contain" }}
+                />
+              </div>
+              <div style={{ padding: "15px" }}>
+                <h3>{item.name}</h3>
+                <p style={{ color: "#666" }}>Category : {item.category}</p>
+                <h2 style={{ color: "#B12704" }}>₹ {item.price}</h2>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    onClick={() => handleBuyNow(item)}
+                    style={{
+                      flex: 1,
+                      background: "orange",
+                      color: "#fff",
+                      border: "none",
+                      padding: "12px",
+                      borderRadius: "25px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
                     }}
-                    style={{ width: "100%", height: "220px", objectFit: "contain" }}
-                  />
-                </div>
-                <div style={{ padding: "15px" }}>
-                  <h3>{item.name}</h3>
-                  <p style={{ color: "#666" }}>Category : {item.category}</p>
-                  <h2 style={{ color: "#B12704" }}>₹ {item.price}</h2>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <button
-                      onClick={() => handleBuyNow(item)}
-                      style={{
-                        flex: 1,
-                        background: "orange",
-                        color: "#fff",
-                        border: "none",
-                        padding: "12px",
-                        borderRadius: "25px",
-                        cursor: "pointer",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      Buy Now
-                    </button>
-                    <button
-                      onClick={() =>
-                        isUser
-                          ? navigate(`/user/product/${item.id}`)
-                          : navigate(`/product/${item.id}`)
-                      }
-                      style={{
-                        flex: 1,
-                        background: "#232f3e",
-                        color: "#fff",
-                        border: "none",
-                        padding: "12px",
-                        borderRadius: "25px",
-                        cursor: "pointer",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      Details
-                    </button>
-                  </div>
+                  >
+                    Buy Now
+                  </button>
+                  <button
+                    onClick={() =>
+                      isUser
+                        ? navigate(`/user/product/${item.id}`)
+                        : navigate(`/product/${item.id}`)
+                    }
+                    style={{
+                      flex: 1,
+                      background: "#232f3e",
+                      color: "#fff",
+                      border: "none",
+                      padding: "12px",
+                      borderRadius: "25px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Details
+                  </button>
                 </div>
               </div>
-            ))
-          ) : (
-            <h2 style={{ textAlign: "center", gridColumn: "1/-1" }}>
-              कोणतेही परिणाम सापडले नाहीत. कृपया वेगळा शब्द वापरून पहा.
-            </h2>
-          )}
+            </div>
+          ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
