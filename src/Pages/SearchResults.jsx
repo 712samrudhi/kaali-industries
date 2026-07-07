@@ -20,6 +20,7 @@ function SearchResults() {
     axios
       .get(`${BASE_URL}/api/products`)
       .then((res) => {
+        console.log("Products from API:", res.data); // 👈 तात्पुरतं debug साठी
         setProducts(res.data || []);
         setError(false);
       })
@@ -29,6 +30,10 @@ function SearchResults() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    console.log("Search query is:", query); // 👈 तात्पुरतं debug साठी
+  }, [query]);
 
   const filteredItems = products.filter((item) => {
     const name = item.name ? item.name.toLowerCase() : "";
