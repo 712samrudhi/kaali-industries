@@ -33,12 +33,16 @@ function SearchResults() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredItems = products.filter((item) => {
+  const exactMatches = products.filter((item) => {
     const name = item.name ? item.name.toLowerCase() : "";
     const category = item.category ? item.category.toLowerCase() : "";
     const q = query.toLowerCase();
     return name.includes(q) || category.includes(q);
   });
+
+  // जर तंतोतंत जुळणारं काही नसेल, तर सर्व products "related" म्हणून दाखवा
+  const showingRelated = exactMatches.length === 0;
+  const displayItems = showingRelated ? products : exactMatches;
 
   const getImageSrc = (image) => {
     if (!image) return FALLBACK_IMAGE;
@@ -90,12 +94,19 @@ function SearchResults() {
     );
   }
 
-  if (filteredItems.length === 0) {
+  if (displayItems.length === 0) {
     return <div style={{ background: "#f5f5f5", minHeight: "100vh" }}></div>;
   }
 
   return (
     <div style={{ background: "#f5f5f5", minHeight: "100vh", padding: "30px" }}>
+
+      {showingRelated && (
+        <p style={{ textAlign: "center", color: "#666", marginBottom: "25px" }}>
+          "{query}" शी तंतोतंत जुळणारं सापडलं नाही — तुम्हाला हे आवडू शकतील:
+        </p>
+      )}
+
       <div
         style={{
           display: "grid",
@@ -103,7 +114,7 @@ function SearchResults() {
           gap: "25px",
         }}
       >
-        {filteredItems.map((item) => (
+        {displayItems.map((item) => (
           <div
             key={item.id}
             style={{
