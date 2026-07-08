@@ -6,14 +6,17 @@ const STEPS = ["Ordered", "Shipped", "Out For Delivery", "Delivered"];
 
 function ManageOrders() {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchOrders = () => {
+    setLoading(true);
     axios
       .get(`${BASE_URL}/api/orders`)
       .then((res) => {
         if (res.data.success) setOrders(res.data.orders);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.log(err))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -32,97 +35,116 @@ function ManageOrders() {
     return idx === -1 ? 0 : idx;
   };
 
+  if (loading) {
+    return (
+      <div style={styles.container}>
+        <h1 style={styles.title}>Manage Orders</h1>
+        <p>Loading orders...</p>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Manage Orders</h1>
 
-      {orders.map((order) => {
-        const activeIndex = currentStepIndex(order.status);
+      {orders.length === 0 ? (
+        <div style={styles.empty}>
+          <h2>No Orders Found</h2>
+        </div>
+      ) : (
+        orders.map((order) => {
+          const activeIndex = currentStepIndex(order.status);
 
-        return (
-          <div key={order.order_id} style={styles.card}>
-            <div style={styles.headerRow}>
-              <div>
-                <strong>Order ID:</strong> {order.order_id}
-                <br />
-                <strong>Customer:</strong> {order.name} | {order.phone}
-                <br />
-                <strong>Address:</strong> {order.address}, {order.city} - {order.pincode}
-                <br />
-                <strong>Payment:</strong> {order.paymentMethod}
-                <br />
-                <strong>Date:</strong>{" "}
-                {order.created_at ? new Date(order.created_at).toLocaleString("en-IN") : ""}
+          return (
+            <div key={order.order_id} style={styles.card}>
+              <div style={styles.headerRow}>
+                <div>
+                  <strong>Order ID:</strong> {order.order_id}
+                  <br />
+                  <strong>Customer:</strong> {order.name} | {order.phone}
+                  <br />
+                  <strong>Address:</strong> {order.address}, {order.city} - {order.pincode}
+                  <br />
+                  <strong>Payment:</strong> {order.paymentMethod}
+                  <br />
+                  <strong>Date:</strong>{" "}
+                  {order.created_at ? new Date(order.created_at).toLocaleString("en-IN") : ""}
+                </div>
               </div>
-            </div>
 
-            {/* ===== STATUS TRACKER ===== */}
-            <div style={styles.tracker}>
-              {STEPS.map((step, index) => {
-                const isDone = index <= activeIndex;
-                return (
-                  <div key={step} style={styles.stepWrapper}>
-                    <button
-                      onClick={() => updateStatus(order.order_id, step)}
-                      style={{
-                        ...styles.stepCircle,
-                        background: isDone ? "green" : "#ddd",
-                        color: isDone ? "#fff" : "#555",
-                      }}
-                      title={`Mark as ${step}`}
-                    >
-                      {isDone ? "✓" : index + 1}
-                    </button>
-                    <span style={styles.stepLabel}>{step}</span>
-                    {index !== STEPS.length - 1 && (
-                      <div
+              {/* ===== STATUS TRACKER ===== */}
+              <div style={styles.tracker}>
+                {STEPS.map((step, index) => {
+                  const isDone = index <= activeIndex;
+                  return (
+                    <div key={step} style={styles.stepWrapper}>
+                      <button
+                        onClick={() => updateStatus(order.order_id, step)}
                         style={{
-                          ...styles.stepLine,
-                          background: index < activeIndex ? "green" : "#ddd",
+                          ...styles.stepCircle,
+                          background: isDone ? "green" : "#ddd",
+                          color: isDone ? "#fff" : "#555",
                         }}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                        title={`Mark as ${step}`}
+                      >
+                        {isDone ? "✓" : index + 1}
+                      </button>
+                      <span style={styles.stepLabel}>{step}</span>
+                      {index !== STEPS.length - 1 && (
+                        <div
+                          style={{
+                            ...styles.stepLine,
+                            background: index < activeIndex ? "green" : "#ddd",
+                          }}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
 
-            {/* ===== PRODUCTS TABLE ===== */}
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th>Image</th>
-                  <th>Product</th>
-                  <th>Variant</th>
-                  <th>Qty</th>
-                  <th>Price</th>
-                  <th>Subtotal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {order.items.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <img
-                        src={`${BASE_URL}/uploads/${item.productImage}`}
-                        alt={item.productName}
-                        style={styles.image}
-                      />
-                    </td>
-                    <td>{item.productName}</td>
-                    <td>{item.variant}</td>
-                    <td>{item.quantity}</td>
-                    <td>₹{item.price}</td>
-                    <td>₹{item.subtotal}</td>
+              {/* ===== PRODUCTS TABLE ===== */}
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Image</th>
+                    <th>Product</th>
+                    <th>Variant</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Subtotal</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {(order.items || []).map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        {item.productImage ? (
+                          <img
+                            src={`${BASE_URL}/uploads/${item.productImage}`}
+                            alt={item.productName}
+                            style={styles.image}
+                          />
+                        ) : (
+                          <span>No Image</span>
+                        )}
+                      </td>
+                      <td>{item.productName}</td>
+                      <td>{item.variant}</td>
+                      <td>{item.quantity}</td>
+                      <td>₹{item.price}</td>
+                      <td>₹{item.subtotal}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-            <h3 style={styles.total}>Order Total: ₹{order.total}</h3>
-          </div>
-        );
-      })}
+              <h3 style={styles.total}>Order Total: ₹{order.total}</h3>
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }
@@ -183,4 +205,5 @@ const styles = {
   table: { width: "100%", borderCollapse: "collapse", marginTop: "10px" },
   image: { width: "60px", height: "60px", objectFit: "contain" },
   total: { textAlign: "right", color: "green", marginTop: "10px" },
+  empty: { background: "#fff", padding: "40px", textAlign: "center", borderRadius: "10px" },
 };
