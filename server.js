@@ -402,6 +402,9 @@ function groupOrders(rows) {
                 total: row.total,
                 status: row.status || "Ordered",
                 created_at: row.created_at,
+                shipped_date: row.shipped_date,
+                delivery_date: row.delivery_date,
+                delivered_date: row.delivered_date,
                 items: [],
             };
         }
