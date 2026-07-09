@@ -369,19 +369,35 @@ app.get("/api/orders/farmer/:farmer_id", (req, res) => {
 app.put("/api/orders/:order_id", (req, res) => {
     const { status } = req.body;
     const orderId = req.params.order_id;
+
     let sql = `UPDATE orders SET status = ?`;
     let values = [status];
     if (status === "Shipped") sql += `, shipped_date = NOW()`;
     if (status === "Out For Delivery") sql += `, delivery_date = NOW()`;
     if (status === "Delivered") sql += `, delivered_date = NOW()`;
-    sql += ` WHERE order_id = ?`;
-    values.push(orderId);
-    db.query(sql, values, (err) => {
-        if (err) return res.status(500).json({ success: false, message: "Database Error" });
+
+    // juन्या orders sathi (order_id NULL asel tar) fallback: numeric "id" column vaparun update kara
+    if (orderId.startsWith("single-")) {
+        const realId = orderId.replace("single-", "");
+        sql += ` WHERE id = ?`;
+        values.push(realId);
+    } else {
+        sql += ` WHERE order_id = ?`;
+        values.push(orderId);
+    }
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.log("UPDATE ERROR:", err);
+            return res.status(500).json({ success: false, message: "Database Error" });
+        }
+        console.log("Rows affected:", result.affectedRows, "| orderId:", orderId, "| status:", status);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: "Order not found — no rows updated" });
+        }
         res.json({ success: true, message: "Order Status Updated" });
     });
 });
-
 // ==================================================
 // ========= HELPER: group order rows by order_id ===
 // ==================================================
