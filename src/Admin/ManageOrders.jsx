@@ -7,7 +7,6 @@ const STEPS = ["Ordered", "Shipped", "Out For Delivery", "Delivered"];
 function ManageOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [updatingOrderId, setUpdatingOrderId] = useState(null); // konta order sadhya update hotoy
 
   const fetchOrders = () => {
     setLoading(true);
@@ -25,22 +24,13 @@ function ManageOrders() {
   }, []);
 
   const updateStatus = (orderId, status) => {
-    if (updatingOrderId) return; // ek update chalu asताना duसरा rokha (double-click guard)
-
-    const confirmChange = window.confirm(
-      `Are you sure you want to mark this order as "${status}"?`
-    );
-    if (!confirmChange) return;
-
-    setUpdatingOrderId(orderId);
     axios
       .put(`${BASE_URL}/api/orders/${orderId}`, { status })
       .then(() => fetchOrders())
       .catch((err) => {
         console.log(err);
         alert("Status update failed, try again!"); // ata fail zala tar admin la kalel
-      })
-      .finally(() => setUpdatingOrderId(null));
+      });
   };
 
   const currentStepIndex = (status) => {
@@ -68,7 +58,6 @@ function ManageOrders() {
       ) : (
         orders.map((order) => {
           const activeIndex = currentStepIndex(order.status);
-          const isUpdatingThisOrder = updatingOrderId === order.order_id;
 
           return (
             <div key={order.order_id} style={styles.card}>
@@ -96,13 +85,10 @@ function ManageOrders() {
                       <button
                         type="button"
                         onClick={() => updateStatus(order.order_id, step)}
-                        disabled={isUpdatingThisOrder}
                         style={{
                           ...styles.stepCircle,
                           background: isDone ? "green" : "#ddd",
                           color: isDone ? "#fff" : "#555",
-                          cursor: isUpdatingThisOrder ? "not-allowed" : "pointer",
-                          opacity: isUpdatingThisOrder ? 0.6 : 1,
                         }}
                         title={`Mark as ${step}`}
                       >
@@ -122,10 +108,6 @@ function ManageOrders() {
                 })}
               </div>
 
-              {isUpdatingThisOrder && (
-                <p style={styles.updatingText}>Updating status...</p>
-              )}
-
               {/* ===== PRODUCTS TABLE ===== */}
               <table style={styles.table}>
                 <thead>
@@ -140,7 +122,7 @@ function ManageOrders() {
                 </thead>
                 <tbody>
                   {(order.items || []).map((item) => (
-                    <tr key={`${order.order_id}-${item.id}`}>
+                    <tr key={item.id}>
                       <td>
                         {item.productImage ? (
                           <img
@@ -206,6 +188,7 @@ const styles = {
     borderRadius: "50%",
     border: "none",
     fontWeight: "bold",
+    cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -222,13 +205,6 @@ const styles = {
     width: "100%",
     height: "3px",
     zIndex: -1,
-  },
-  updatingText: {
-    fontSize: "13px",
-    color: "#888",
-    fontStyle: "italic",
-    marginTop: "-8px",
-    marginBottom: "8px",
   },
   table: { width: "100%", borderCollapse: "collapse", marginTop: "10px" },
   image: { width: "60px", height: "60px", objectFit: "contain" },
