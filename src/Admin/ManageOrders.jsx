@@ -27,7 +27,10 @@ function ManageOrders() {
     axios
       .put(`${BASE_URL}/api/orders/${orderId}`, { status })
       .then(() => fetchOrders())
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log(err);
+        alert("Status update failed, try again!"); // ata fail zala tar admin la kalel
+      });
   };
 
   const currentStepIndex = (status) => {
@@ -80,6 +83,7 @@ function ManageOrders() {
                   return (
                     <div key={step} style={styles.stepWrapper}>
                       <button
+                        type="button"
                         onClick={() => updateStatus(order.order_id, step)}
                         style={{
                           ...styles.stepCircle,

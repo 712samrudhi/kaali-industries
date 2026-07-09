@@ -18,7 +18,15 @@ function OrderPage() {
   };
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(); // initial load
+
+    // dar 5 second nī orders auto-refresh honyasathi
+    // (admin ne status update kelyavar, ithe reload न karता automatically dakhel)
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 5000);
+
+    return () => clearInterval(interval); // cleanup on unmount
   }, []);
 
   const getStepIndex = (status) => {
