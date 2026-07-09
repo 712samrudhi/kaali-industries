@@ -369,16 +369,35 @@ app.get("/api/orders/farmer/:farmer_id", (req, res) => {
 app.put("/api/orders/:order_id", (req, res) => {
     const { status } = req.body;
     const orderId = req.params.order_id;
+
+    const VALID_STATUSES = ["Ordered", "Shipped", "Out For Delivery", "Delivered"];
+    if (!status || !VALID_STATUSES.includes(status)) {
+        return res.status(400).json({ success: false, message: "Invalid status value" });
+    }
+
     let sql = `UPDATE orders SET status = ?`;
     let values = [status];
+
     if (status === "Shipped") sql += `, shipped_date = NOW()`;
     if (status === "Out For Delivery") sql += `, delivery_date = NOW()`;
     if (status === "Delivered") sql += `, delivered_date = NOW()`;
+
     sql += ` WHERE order_id = ?`;
     values.push(orderId);
-    db.query(sql, values, (err) => {
-        if (err) return res.status(500).json({ success: false, message: "Database Error" });
-        res.json({ success: true, message: "Order Status Updated" });
+
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.log("Update Order Status Error:", err);
+            return res.status(500).json({ success: false, message: "Database Error" });
+        }
+
+        // Real check: kiti rows prtyksh update zalya
+        if (result.affectedRows === 0) {
+            console.log(`No order found with order_id = ${orderId}`);
+            return res.status(404).json({ success: false, message: "Order not found or already up to date" });
+        }
+
+        res.json({ success: true, message: "Order Status Updated", affectedRows: result.affectedRows });
     });
 });
 
