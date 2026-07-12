@@ -194,9 +194,12 @@ app.get("/related-products/:id", (req, res) => {
 // ==================================================
 // ============ PRODUCT DETAILS ======================
 // ==================================================
+// NOTE: Fixed to query by primary key "id" instead of "productId" so that
+// this GET route stays consistent with the PUT and DELETE routes below,
+// and with how the frontend builds navigation links (using item.id).
 app.get("/product-details/:id", (req, res) => {
-    const productId = req.params.id;
-    db.query("SELECT * FROM product_details WHERE productId = ?", [productId], (err, result) => {
+    const id = req.params.id;
+    db.query("SELECT * FROM product_details WHERE id = ?", [id], (err, result) => {
         if (err) return res.status(500).json({ success: false });
         if (result.length === 0) return res.status(404).json({ success: false, message: "Not Found" });
         const product = result[0];
