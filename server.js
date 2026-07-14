@@ -199,12 +199,16 @@ app.get("/related-products/:id", (req, res) => {
 // ==================================================
 // ============ PRODUCT DETAILS ======================
 // ==================================================
-// FIX: "id" ऐवजी "productId" column ने search kartoy, kaaran
-// frontend navigate(`/product/${item.productId}`) वापरतो —
-// tyamule URL madhla id ha actually "productId" cha value asto.
+// FIX (IMPORTANT): Admin panel (ManageProductDetails.jsx) dropdown
+// "id" (primary key) pathavto, pan public site product page
+// "productId" (jasa "NF-001") pathavu shakto. Aadhi ha route FAKT
+// "productId" column check karat hota, tyamule admin panel numeric
+// ids sathi (jase 11, 6) 404 yet hota.
+// Ata donhi "id" (primary key) आणि "productId" match karto,
+// jyamule kontyahi baju var (admin ki public) 404 yenar nahi.
 app.get("/product-details/:id", (req, res) => {
     const id = req.params.id;
-    db.query("SELECT * FROM product_details WHERE productId = ?", [id], (err, result) => {
+    db.query("SELECT * FROM product_details WHERE id = ? OR productId = ?", [id, id], (err, result) => {
         if (err) return res.status(500).json({ success: false });
         if (result.length === 0) return res.status(404).json({ success: false, message: "Not Found" });
         const product = result[0];
