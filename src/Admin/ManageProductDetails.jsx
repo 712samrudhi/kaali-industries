@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import BASE_URL from "../config";
 
 function ManageProductDetails() {
-  const [data, setData] = useState([]);
-  const [editId, setEditId] = useState(null);
+  // ===== List of all products (for selecting which one to edit) =====
+  const [products, setProducts] = useState([]);
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({
+  // ===== Form state (same fields as ProductDetails.jsx) =====
+  const [formData, setFormData] = useState({
     productId: "",
     productName: "",
     specification: "",
@@ -16,10 +19,23 @@ function ManageProductDetails() {
     recommendedApplication: "",
     suitableCrops: "",
     features: "",
-    variants: [],
-    customSections: [],
   });
 
+  const [variants, setVariants] = useState([{ ml: "", price: "" }]);
+
+  const [customSections, setCustomSections] = useState([
+    { title: "", description: "" },
+  ]);
+
+  // New images the admin uploads to REPLACE existing ones
+  const [images, setImages] = useState({
+    image1: null,
+    image2: null,
+    image3: null,
+    image4: null,
+  });
+
+  // Existing image URLs coming from the server (for preview)
   const [existingImages, setExistingImages] = useState({
     image1: "",
     image2: "",
@@ -27,171 +43,214 @@ function ManageProductDetails() {
     image4: "",
   });
 
-  const [newImages, setNewImages] = useState({
-    image1: null,
-    image2: null,
-    image3: null,
-    image4: null,
-  });
-
+  // ===== Fetch all products for the dropdown =====
   useEffect(() => {
-    loadData();
+    fetchProducts();
   }, []);
 
-  const loadData = async () => {
+  const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/all-product-details`);
-      setData(res.data);
+      const res = await axios.get(`${BASE_URL}/product-details`);
+      setProducts(res.data.products || res.data || []);
     } catch (err) {
       console.log(err);
+      alert("Error Loading Product List");
     }
   };
 
-  const editData = (item) => {
-    setEditId(item.id);
+  // ===== When admin selects a product, fetch its full details =====
+  const handleSelectProduct = async (e) => {
+    const id = e.target.value;
+    setSelectedProductId(id);
 
-    setForm({
-      productId: item.productId || "",
-      productName: item.productName || "",
-      specification: item.specification || "",
-      about: item.about || "",
-      keyBenefits: item.keyBenefits || "",
-      modeOfAction: item.modeOfAction || "",
-      recommendedApplication: item.recommendedApplication || "",
-      suitableCrops: item.suitableCrops || "",
-      features: item.features || "",
-      variants: item.variants || [],
-      customSections: item.customSections || [],
-    });
+    if (!id) {
+      resetForm();
+      return;
+    }
 
-    setExistingImages({
-      image1: item.image1 || "",
-      image2: item.image2 || "",
-      image3: item.image3 || "",
-      image4: item.image4 || "",
-    });
+    try {
+      setLoading(true);
+      const res = await axios.get(`${BASE_URL}/product-details/${id}`);
+      const product = res.data.product || res.data;
 
-    setNewImages({
-      image1: null,
-      image2: null,
-      image3: null,
-      image4: null,
-    });
+      setFormData({
+        productId: product.productId || "",
+        productName: product.productName || "",
+        specification: product.specification || "",
+        about: product.about || "",
+        keyBenefits: product.keyBenefits || "",
+        modeOfAction: product.modeOfAction || "",
+        recommendedApplication: product.recommendedApplication || "",
+        suitableCrops: product.suitableCrops || "",
+        features: product.features || "",
+      });
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+      setVariants(
+        product.variants && product.variants.length > 0
+          ? product.variants
+          : [{ ml: "", price: "" }]
+      );
+
+      setCustomSections(
+        product.customSections && product.customSections.length > 0
+          ? product.customSections
+          : [{ title: "", description: "" }]
+      );
+
+      setExistingImages({
+        image1: product.image1 || "",
+        image2: product.image2 || "",
+        image3: product.image3 || "",
+        image4: product.image4 || "",
+      });
+
+      setImages({ image1: null, image2: null, image3: null, image4: null });
+    } catch (err) {
+      console.log(err);
+      alert("Error Loading Product Details");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleImageChange = (e) => {
-    setNewImages({
-      ...newImages,
-      [e.target.name]: e.target.files[0],
+  const resetForm = () => {
+    setFormData({
+      productId: "",
+      productName: "",
+      specification: "",
+      about: "",
+      keyBenefits: "",
+      modeOfAction: "",
+      recommendedApplication: "",
+      suitableCrops: "",
+      features: "",
     });
+    setVariants([{ ml: "", price: "" }]);
+    setCustomSections([{ title: "", description: "" }]);
+    setImages({ image1: null, image2: null, image3: null, image4: null });
+    setExistingImages({ image1: "", image2: "", image3: "", image4: "" });
   };
 
-  const handleVariantChange = (index, field, value) => {
-    const updated = [...form.variants];
-    updated[index][field] = value;
-    setForm({ ...form, variants: updated });
+  // ===== Basic field handlers =====
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImage = (e) => {
+    setImages({ ...images, [e.target.name]: e.target.files[0] });
+  };
+
+  // ===== Variant handlers =====
+  const handleVariantChange = (index, e) => {
+    const updatedVariants = [...variants];
+    updatedVariants[index][e.target.name] = e.target.value;
+    setVariants(updatedVariants);
   };
 
   const addVariant = () => {
-    setForm({
-      ...form,
-      variants: [...form.variants, { ml: "", price: "" }],
-    });
+    setVariants([...variants, { ml: "", price: "" }]);
   };
 
   const removeVariant = (index) => {
-    const updated = [...form.variants];
-    updated.splice(index, 1);
-    setForm({ ...form, variants: updated });
+    const updatedVariants = [...variants];
+    updatedVariants.splice(index, 1);
+    setVariants(updatedVariants);
   };
 
-  const handleSectionChange = (index, field, value) => {
-    const updated = [...form.customSections];
-    updated[index][field] = value;
-    setForm({ ...form, customSections: updated });
+  // ===== Custom Section handlers =====
+  const handleSectionChange = (index, e) => {
+    const updated = [...customSections];
+    updated[index][e.target.name] = e.target.value;
+    setCustomSections(updated);
   };
 
   const addSection = () => {
-    setForm({
-      ...form,
-      customSections: [...form.customSections, { title: "", description: "" }],
-    });
+    setCustomSections([...customSections, { title: "", description: "" }]);
   };
 
   const removeSection = (index) => {
-    const updated = [...form.customSections];
+    const updated = [...customSections];
     updated.splice(index, 1);
-    setForm({ ...form, customSections: updated });
+    setCustomSections(updated);
   };
 
-  const updateData = async () => {
+  // ===== Submit updated details =====
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!selectedProductId) {
+      alert("Please select a product to edit");
+      return;
+    }
+
+    if (!formData.productId.trim()) {
+      alert("Product ID is required");
+      return;
+    }
+
+    const data = new FormData();
+
+    data.append("productId", formData.productId);
+    data.append("productName", formData.productName);
+    data.append("specification", formData.specification);
+    data.append("about", formData.about);
+    data.append("keyBenefits", formData.keyBenefits);
+    data.append("modeOfAction", formData.modeOfAction);
+    data.append("recommendedApplication", formData.recommendedApplication);
+    data.append("suitableCrops", formData.suitableCrops);
+    data.append("features", formData.features);
+
+    data.append("variants", JSON.stringify(variants));
+
+    const filledSections = customSections.filter(
+      (s) => s.title.trim() !== ""
+    );
+    data.append("customSections", JSON.stringify(filledSections));
+
+    // Only send images that were actually replaced; backend should
+    // keep the old image if a new one isn't provided.
+    if (images.image1) data.append("image1", images.image1);
+    if (images.image2) data.append("image2", images.image2);
+    if (images.image3) data.append("image3", images.image3);
+    if (images.image4) data.append("image4", images.image4);
+
     try {
-      const data = new FormData();
+      const res = await axios.put(
+        `${BASE_URL}/product-details/${selectedProductId}`,
+        data,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-      data.append("productId", form.productId);
-      data.append("productName", form.productName);
-      data.append("specification", form.specification);
-      data.append("about", form.about);
-      data.append("keyBenefits", form.keyBenefits);
-      data.append("modeOfAction", form.modeOfAction);
-      data.append("recommendedApplication", form.recommendedApplication);
-      data.append("suitableCrops", form.suitableCrops);
-      data.append("features", form.features);
-      data.append("variants", JSON.stringify(form.variants));
-      data.append("customSections", JSON.stringify(form.customSections));
-
-      data.append("oldImage1", existingImages.image1);
-      data.append("oldImage2", existingImages.image2);
-      data.append("oldImage3", existingImages.image3);
-      data.append("oldImage4", existingImages.image4);
-
-      if (newImages.image1) data.append("image1", newImages.image1);
-      if (newImages.image2) data.append("image2", newImages.image2);
-      if (newImages.image3) data.append("image3", newImages.image3);
-      if (newImages.image4) data.append("image4", newImages.image4);
-
-      await axios.put(`${BASE_URL}/product-details/${editId}`, data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      alert("Product Updated Successfully");
-
-      setEditId(null);
-
-      setForm({
-        productId: "",
-        productName: "",
-        specification: "",
-        about: "",
-        keyBenefits: "",
-        modeOfAction: "",
-        recommendedApplication: "",
-        suitableCrops: "",
-        features: "",
-        variants: [],
-        customSections: [],
-      });
-
-      loadData();
+      alert(res.data.message || "Product Updated Successfully");
+      fetchProducts();
     } catch (err) {
       console.log(err);
-      alert("Update Failed");
+      alert("Error Updating Product Details");
     }
   };
 
-  const deleteData = async (id) => {
-    try {
-      const confirmDelete = window.confirm("Are you sure you want to delete?");
-      if (!confirmDelete) return;
+  // ===== Delete a product =====
+  const handleDelete = async () => {
+    if (!selectedProductId) {
+      alert("Please select a product to delete");
+      return;
+    }
 
-      await axios.delete(`${BASE_URL}/product-details/${id}`);
-      alert("Deleted Successfully");
-      loadData();
+    if (!window.confirm("Are you sure you want to delete this product?")) {
+      return;
+    }
+
+    try {
+      const res = await axios.delete(
+        `${BASE_URL}/product-details/${selectedProductId}`
+      );
+      alert(res.data.message || "Product Deleted Successfully");
+      setSelectedProductId("");
+      resetForm();
+      fetchProducts();
     } catch (err) {
       console.log(err);
-      alert("Delete Failed");
+      alert("Error Deleting Product");
     }
   };
 
@@ -199,137 +258,193 @@ function ManageProductDetails() {
     <div style={styles.container}>
       <h2 style={styles.heading}>Manage Product Details</h2>
 
-      {editId && (
-        <div style={styles.editBox}>
-          <h3>Edit Product</h3>
+      {/* ===== Product selector ===== */}
+      <select
+        value={selectedProductId}
+        onChange={handleSelectProduct}
+        style={styles.input}
+      >
+        <option value="">-- Select Product to Edit --</option>
+        {products.map((p) => (
+          <option key={p._id || p.productId} value={p._id || p.productId}>
+            {p.productName ? `${p.productId} - ${p.productName}` : p.productId}
+          </option>
+        ))}
+      </select>
 
+      {loading && <p>Loading product details...</p>}
+
+      {selectedProductId && !loading && (
+        <form onSubmit={handleSubmit}>
           <input
             type="text"
-            placeholder="Product ID"
-            value={form.productId}
-            onChange={(e) => setForm({ ...form, productId: e.target.value })}
+            name="productId"
+            placeholder="Product ID *"
+            value={formData.productId}
+            onChange={handleChange}
+            required
             style={styles.input}
           />
 
           <input
             type="text"
-            placeholder="Product Name"
-            value={form.productName}
-            onChange={(e) => setForm({ ...form, productName: e.target.value })}
+            name="productName"
+            placeholder="Product Name (Optional)"
+            value={formData.productName}
+            onChange={handleChange}
             style={styles.input}
           />
 
           <textarea
-            placeholder="Specification"
-            value={form.specification}
-            onChange={(e) => setForm({ ...form, specification: e.target.value })}
+            name="specification"
+            placeholder="Specification (Optional)"
+            value={formData.specification}
+            onChange={handleChange}
+            rows="3"
             style={styles.textarea}
           />
 
           <textarea
-            placeholder="About"
-            value={form.about}
-            onChange={(e) => setForm({ ...form, about: e.target.value })}
+            name="about"
+            placeholder="About (Optional)"
+            value={formData.about}
+            onChange={handleChange}
+            rows="3"
             style={styles.textarea}
           />
 
           <textarea
-            placeholder="Key Benefits"
-            value={form.keyBenefits}
-            onChange={(e) => setForm({ ...form, keyBenefits: e.target.value })}
+            name="keyBenefits"
+            placeholder="Key Benefits (Optional)"
+            value={formData.keyBenefits}
+            onChange={handleChange}
+            rows="3"
             style={styles.textarea}
           />
 
           <textarea
-            placeholder="Mode Of Action"
-            value={form.modeOfAction}
-            onChange={(e) => setForm({ ...form, modeOfAction: e.target.value })}
+            name="modeOfAction"
+            placeholder="Mode Of Action (Optional)"
+            value={formData.modeOfAction}
+            onChange={handleChange}
+            rows="3"
             style={styles.textarea}
           />
 
           <textarea
-            placeholder="Recommended Application"
-            value={form.recommendedApplication}
-            onChange={(e) => setForm({ ...form, recommendedApplication: e.target.value })}
+            name="recommendedApplication"
+            placeholder="Recommended Application (Optional)"
+            value={formData.recommendedApplication}
+            onChange={handleChange}
+            rows="3"
             style={styles.textarea}
           />
 
           <textarea
-            placeholder="Suitable Crops"
-            value={form.suitableCrops}
-            onChange={(e) => setForm({ ...form, suitableCrops: e.target.value })}
+            name="suitableCrops"
+            placeholder="Suitable Crops (Optional)"
+            value={formData.suitableCrops}
+            onChange={handleChange}
+            rows="3"
             style={styles.textarea}
           />
 
           <textarea
-            placeholder="Features"
-            value={form.features}
-            onChange={(e) => setForm({ ...form, features: e.target.value })}
+            name="features"
+            placeholder="Features (Optional)"
+            value={formData.features}
+            onChange={handleChange}
+            rows="3"
             style={styles.textarea}
           />
 
-          <h3>Product Variants</h3>
+          <h3>Product Variants (Optional)</h3>
 
-          {form.variants.map((variant, index) => (
+          {variants.map((variant, index) => (
             <div key={index} style={styles.variantRow}>
               <input
                 type="text"
-                placeholder="ML"
+                name="ml"
+                placeholder="ML (Example: 4ml)"
                 value={variant.ml}
-                onChange={(e) => handleVariantChange(index, "ml", e.target.value)}
+                onChange={(e) => handleVariantChange(index, e)}
                 style={styles.variantInput}
               />
               <input
                 type="number"
+                name="price"
                 placeholder="Price"
                 value={variant.price}
-                onChange={(e) => handleVariantChange(index, "price", e.target.value)}
+                onChange={(e) => handleVariantChange(index, e)}
                 style={styles.variantInput}
               />
-              <button type="button" onClick={() => removeVariant(index)} style={styles.deleteBtn}>
-                Delete
-              </button>
+              {variants.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeVariant(index)}
+                  style={styles.deleteBtn}
+                >
+                  Delete
+                </button>
+              )}
             </div>
           ))}
 
-          <button type="button" onClick={addVariant} style={styles.editBtn}>
+          <button type="button" onClick={addVariant} style={styles.addBtn}>
             + Add Variant
           </button>
 
-          <h3>Additional Sections</h3>
+          {/* ===== Custom Sections ===== */}
+          <h3>Additional Sections (Optional)</h3>
+          <p style={{ fontSize: "13px", color: "#666", marginTop: "-5px" }}>
+            प्रत्येक product साठी वेगळी माहिती हवी असल्यास इथे स्वतःचा Title
+            (बोल्ड हेडिंग) आणि Description टाका.
+          </p>
 
-          {form.customSections.map((section, index) => (
+          {customSections.map((section, index) => (
             <div key={index} style={styles.sectionBox}>
               <input
                 type="text"
-                placeholder="Section Title"
+                name="title"
+                placeholder="Section Title (e.g. Storage Instructions)"
                 value={section.title}
-                onChange={(e) => handleSectionChange(index, "title", e.target.value)}
+                onChange={(e) => handleSectionChange(index, e)}
                 style={styles.input}
               />
               <textarea
+                name="description"
                 placeholder="Description"
                 value={section.description}
-                onChange={(e) => handleSectionChange(index, "description", e.target.value)}
+                onChange={(e) => handleSectionChange(index, e)}
+                rows="3"
                 style={styles.textarea}
               />
-              <button type="button" onClick={() => removeSection(index)} style={styles.deleteBtn}>
-                Delete Section
-              </button>
+              {customSections.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeSection(index)}
+                  style={styles.deleteBtn}
+                >
+                  Delete Section
+                </button>
+              )}
             </div>
           ))}
 
-          <button type="button" onClick={addSection} style={styles.editBtn}>
+          <button type="button" onClick={addSection} style={styles.addBtn}>
             + Add Section
           </button>
 
-          <h3>Product Images</h3>
+          <h3>Product Images (Optional)</h3>
+          <p style={{ fontSize: "13px", color: "#666", marginTop: "-5px" }}>
+            नवीन image निवडल्यासच जुनी image बदलेल, अन्यथा जुनीच राहील.
+          </p>
 
           {["image1", "image2", "image3", "image4"].map((key) => (
-            <div key={key} style={styles.imageRow}>
+            <div key={key} style={styles.imageBox}>
               {existingImages[key] && (
                 <img
-                  src={`${BASE_URL}/uploads/${existingImages[key]}`}
+                  src={existingImages[key]}
                   alt={key}
                   style={styles.previewImg}
                 />
@@ -337,95 +452,39 @@ function ManageProductDetails() {
               <input
                 type="file"
                 name={key}
-                accept="image/*"
-                onChange={handleImageChange}
+                onChange={handleImage}
                 style={styles.input}
               />
             </div>
           ))}
 
-          <div style={styles.buttonRow}>
-            <button onClick={updateData} style={styles.updateBtn}>
-              Update Product
-            </button>
+          <button type="submit" style={styles.saveBtn}>
+            Update Product Details
+          </button>
 
-            <button onClick={() => setEditId(null)} style={styles.cancelBtn}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {data.length === 0 ? (
-        <p>No Products Found</p>
-      ) : (
-        data.map((item) => (
-          <div key={item.id} style={styles.card}>
-            <h3>{item.productName}</h3>
-
-            <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-              {[item.image1, item.image2, item.image3, item.image4]
-                .filter(Boolean)
-                .map((img, i) => (
-                  <img
-                    key={i}
-                    src={`${BASE_URL}/uploads/${img}`}
-                    alt=""
-                    style={styles.previewImg}
-                  />
-                ))}
-            </div>
-
-            <p><b>Product ID:</b> {item.productId}</p>
-            <p><b>Specification:</b> {item.specification}</p>
-            <p><b>About:</b> {item.about}</p>
-            <p><b>Key Benefits:</b> {item.keyBenefits}</p>
-            <p><b>Mode Of Action:</b> {item.modeOfAction}</p>
-            <p><b>Recommended Application:</b> {item.recommendedApplication}</p>
-            <p><b>Suitable Crops:</b> {item.suitableCrops}</p>
-            <p><b>Features:</b> {item.features}</p>
-
-            <p><b>Variants:</b></p>
-            {item.variants?.map((v, index) => (
-              <div key={index}>{v.ml} - ₹{v.price}</div>
-            ))}
-
-            {item.customSections?.length > 0 && (
-              <>
-                <p><b>Additional Sections:</b></p>
-                {item.customSections.map((sec, index) => (
-                  <div key={index}>
-                    <b>{sec.title}</b>: {sec.description}
-                  </div>
-                ))}
-              </>
-            )}
-
-            <div style={styles.buttonRow}>
-              <button onClick={() => editData(item)} style={styles.editBtn}>
-                Edit
-              </button>
-              <button onClick={() => deleteData(item.id)} style={styles.deleteBtn}>
-                Delete
-              </button>
-            </div>
-          </div>
-        ))
+          <button
+            type="button"
+            onClick={handleDelete}
+            style={styles.deleteProductBtn}
+          >
+            Delete Product
+          </button>
+        </form>
       )}
     </div>
   );
 }
 
 const styles = {
-  container: { maxWidth: "1000px", margin: "20px auto", padding: "20px" },
-  heading: { textAlign: "center", marginBottom: "20px" },
-  editBox: {
+  container: {
+    maxWidth: "900px",
+    margin: "20px auto",
     background: "#fff",
-    padding: "20px",
+    padding: "25px",
     borderRadius: "10px",
     boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-    marginBottom: "20px",
   },
+  heading: { textAlign: "center", marginBottom: "20px" },
   input: {
     width: "100%",
     padding: "10px",
@@ -439,7 +498,7 @@ const styles = {
     marginBottom: "15px",
     border: "1px solid #ccc",
     borderRadius: "5px",
-    minHeight: "80px",
+    resize: "vertical",
   },
   variantRow: { display: "flex", gap: "10px", marginBottom: "10px" },
   variantInput: {
@@ -455,42 +514,26 @@ const styles = {
     marginBottom: "15px",
     background: "#fafafa",
   },
-  imageRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "15px",
-    marginBottom: "10px",
+  imageBox: {
+    marginBottom: "15px",
   },
   previewImg: {
-    width: "70px",
-    height: "70px",
+    width: "120px",
+    height: "120px",
     objectFit: "cover",
-    border: "1px solid #ddd",
-    borderRadius: "5px",
+    borderRadius: "6px",
+    display: "block",
+    marginBottom: "8px",
+    border: "1px solid #ccc",
   },
-  card: {
-    background: "#fff",
-    padding: "20px",
-    borderRadius: "10px",
-    marginBottom: "20px",
-    boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-  },
-  buttonRow: { display: "flex", gap: "10px", marginTop: "15px" },
-  editBtn: {
+  addBtn: {
     background: "#2196F3",
     color: "#fff",
     border: "none",
     padding: "10px 15px",
     borderRadius: "5px",
     cursor: "pointer",
-  },
-  updateBtn: {
-    background: "#4CAF50",
-    color: "#fff",
-    border: "none",
-    padding: "10px 15px",
-    borderRadius: "5px",
-    cursor: "pointer",
+    marginBottom: "20px",
   },
   deleteBtn: {
     background: "#f44336",
@@ -500,13 +543,27 @@ const styles = {
     borderRadius: "5px",
     cursor: "pointer",
   },
-  cancelBtn: {
-    background: "#757575",
+  saveBtn: {
+    width: "100%",
+    background: "#4CAF50",
     color: "#fff",
     border: "none",
-    padding: "10px 15px",
+    padding: "14px",
     borderRadius: "5px",
     cursor: "pointer",
+    fontSize: "16px",
+    marginTop: "20px",
+  },
+  deleteProductBtn: {
+    width: "100%",
+    background: "#e53935",
+    color: "#fff",
+    border: "none",
+    padding: "14px",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontSize: "16px",
+    marginTop: "10px",
   },
 };
 

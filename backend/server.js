@@ -4,6 +4,7 @@ const db = require("./db");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
 
 const app = express();
 
@@ -313,14 +314,17 @@ app.post("/api/orders", (req, res) => {
     const { farmer_id, name, phone, address, city, pincode, paymentMethod, items, totalPrice } = req.body;
     if (!items || items.length === 0) return res.status(400).json({ success: false, message: "No Items Found" });
 
+    const orderId = crypto.randomUUID(); // ek checkout cha sagla items sathi common ID
+
     let completed = 0;
     let failed = false;
+
     items.forEach((item) => {
         const subtotal = Number(item.price) * Number(item.qty);
-        db.query(`INSERT INTO orders (farmer_id, name, phone, address, city, pincode, paymentMethod,
-            productName, productImage, variant, price, quantity, subtotal, total)
-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, [farmer_id, name, phone, address, city, pincode, paymentMethod,
-                item.name, item.image, item.ml, item.price, item.qty, subtotal, totalPrice
+        db.query(`INSERT INTO orders (order_id, farmer_id, name, phone, address, city, pincode, paymentMethod,
+            productName, productImage, variant, price, quantity, subtotal, total, status)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, [orderId, farmer_id, name, phone, address, city, pincode, paymentMethod,
+                item.name, item.image, item.ml, item.price, item.qty, subtotal, totalPrice, "Ordered"
             ],
             (err) => {
                 if (err) {
@@ -333,50 +337,86 @@ app.post("/api/orders", (req, res) => {
                 }
                 completed++;
                 if (completed === items.length && !failed) {
-                    res.json({ success: true, message: "Order Placed Successfully" });
+                    res.json({ success: true, message: "Order Placed Successfully", order_id: orderId });
                 }
             });
     });
 });
 
 // ==================================================
-// ================= GET ALL ORDERS =================
+// ================= GET ALL ORDERS (grouped) =======
 // ==================================================
 app.get("/api/orders", (req, res) => {
     db.query("SELECT * FROM orders ORDER BY id DESC", (err, result) => {
         if (err) return res.status(500).json({ success: false, message: "Database Error" });
-        res.json({ success: true, orders: result });
+        res.json({ success: true, orders: groupOrders(result) });
     });
 });
 
 // ==================================================
-// ================= GET FARMER ORDERS ==============
+// ================= GET FARMER ORDERS (grouped) ====
 // ==================================================
-app.get("/api/orders/:farmer_id", (req, res) => {
+app.get("/api/orders/farmer/:farmer_id", (req, res) => {
     db.query("SELECT * FROM orders WHERE farmer_id = ? ORDER BY id DESC", [req.params.farmer_id], (err, result) => {
         if (err) return res.status(500).json({ success: false, message: "Database Error" });
-        res.json({ success: true, orders: result });
+        res.json({ success: true, orders: groupOrders(result) });
     });
 });
 
 // ==================================================
-// ================= UPDATE ORDER STATUS ============
+// ================= UPDATE ORDER STATUS (by order_id)
 // ==================================================
-app.put("/api/orders/:id", (req, res) => {
+app.put("/api/orders/:order_id", (req, res) => {
     const { status } = req.body;
-    const id = req.params.id;
+    const orderId = req.params.order_id;
     let sql = `UPDATE orders SET status = ?`;
     let values = [status];
     if (status === "Shipped") sql += `, shipped_date = NOW()`;
     if (status === "Out For Delivery") sql += `, delivery_date = NOW()`;
     if (status === "Delivered") sql += `, delivered_date = NOW()`;
-    sql += ` WHERE id = ?`;
-    values.push(id);
+    sql += ` WHERE order_id = ?`;
+    values.push(orderId);
     db.query(sql, values, (err) => {
         if (err) return res.status(500).json({ success: false, message: "Database Error" });
         res.json({ success: true, message: "Order Status Updated" });
     });
 });
+
+// ==================================================
+// ========= HELPER: group order rows by order_id ===
+// ==================================================
+function groupOrders(rows) {
+    const grouped = {};
+    rows.forEach((row) => {
+        const key = row.order_id || `single-${row.id}`; // purnya (order_id nasलेल्या) orders sathi fallback
+        if (!grouped[key]) {
+            grouped[key] = {
+                order_id: key,
+                farmer_id: row.farmer_id,
+                name: row.name,
+                phone: row.phone,
+                address: row.address,
+                city: row.city,
+                pincode: row.pincode,
+                paymentMethod: row.paymentMethod,
+                total: row.total,
+                status: row.status || "Ordered",
+                created_at: row.created_at,
+                items: [],
+            };
+        }
+        grouped[key].items.push({
+            id: row.id,
+            productName: row.productName,
+            productImage: row.productImage,
+            variant: row.variant,
+            price: row.price,
+            quantity: row.quantity,
+            subtotal: row.subtotal,
+        });
+    });
+    return Object.values(grouped);
+}
 
 // ==================================================
 // ================= MANAGE USERS ===================

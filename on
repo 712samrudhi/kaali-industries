@@ -1,0 +1,133 @@
+[1mdiff --git a/backend/server.js b/backend/server.js[m
+[1mindex 5867864..2ab529a 100644[m
+[1m--- a/backend/server.js[m
+[1m+++ b/backend/server.js[m
+[36m@@ -4,6 +4,7 @@[m [mconst db = require("./db");[m
+ const multer = require("multer");[m
+ const path = require("path");[m
+ const fs = require("fs");[m
+[32m+[m[32mconst crypto = require("crypto");[m
+ [m
+ const app = express();[m
+ [m
+[36m@@ -313,14 +314,17 @@[m [mapp.post("/api/orders", (req, res) => {[m
+     const { farmer_id, name, phone, address, city, pincode, paymentMethod, items, totalPrice } = req.body;[m
+     if (!items || items.length === 0) return res.status(400).json({ success: false, message: "No Items Found" });[m
+ [m
+[32m+[m[32m    const orderId = crypto.randomUUID(); // ek checkout cha sagla items sathi common ID[m
+[32m+[m
+     let completed = 0;[m
+     let failed = false;[m
+[32m+[m
+     items.forEach((item) => {[m
+         const subtotal = Number(item.price) * Number(item.qty);[m
+[31m-        db.query(`INSERT INTO orders (farmer_id, name, phone, address, city, pincode, paymentMethod,[m
+[31m-            productName, productImage, variant, price, quantity, subtotal, total)[m
+[31m-            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, [farmer_id, name, phone, address, city, pincode, paymentMethod,[m
+[31m-                item.name, item.image, item.ml, item.price, item.qty, subtotal, totalPrice[m
+[32m+[m[32m        db.query(`INSERT INTO orders (order_id, farmer_id, name, phone, address, city, pincode, paymentMethod,[m
+[32m+[m[32m            productName, productImage, variant, price, quantity, subtotal, total, status)[m
+[32m+[m[32m            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, [orderId, farmer_id, name, phone, address, city, pincode, paymentMethod,[m
+[32m+[m[32m                item.name, item.image, item.ml, item.price, item.qty, subtotal, totalPrice, "Ordered"[m
+             ],[m
+             (err) => {[m
+                 if (err) {[m
+[36m@@ -333,51 +337,87 @@[m [mapp.post("/api/orders", (req, res) => {[m
+                 }[m
+                 completed++;[m
+                 if (completed === items.length && !failed) {[m
+[31m-                    res.json({ success: true, message: "Order Placed Successfully" });[m
+[32m+[m[32m                    res.json({ success: true, message: "Order Placed Successfully", order_id: orderId });[m
+                 }[m
+             });[m
+     });[m
+ });[m
+ [m
+ // ==================================================[m
+[31m-// ================= GET ALL ORDERS =================[m
+[32m+[m[32m// ================= GET ALL ORDERS (grouped) =======[m
+ // ==================================================[m
+ app.get("/api/orders", (req, res) => {[m
+     db.query("SELECT * FROM orders ORDER BY id DESC", (err, result) => {[m
+         if (err) return res.status(500).json({ success: false, message: "Database Error" });[m
+[31m-        res.json({ success: true, orders: result });[m
+[32m+[m[32m        res.json({ success: true, orders: groupOrders(result) });[m
+     });[m
+ });[m
+ [m
+ // ==================================================[m
+[31m-// ================= GET FARMER ORDERS ==============[m
+[32m+[m[32m// ================= GET FARMER ORDERS (grouped) ====[m
+ // ==================================================[m
+[31m-app.get("/api/orders/:farmer_id", (req, res) => {[m
+[32m+[m[32mapp.get("/api/orders/farmer/:farmer_id", (req, res) => {[m
+     db.query("SELECT * FROM orders WHERE farmer_id = ? ORDER BY id DESC", [req.params.farmer_id], (err, result) => {[m
+         if (err) return res.status(500).json({ success: false, message: "Database Error" });[m
+[31m-        res.json({ success: true, orders: result });[m
+[32m+[m[32m        res.json({ success: true, orders: groupOrders(result) });[m
+     });[m
+ });[m
+ [m
+ // ==================================================[m
+[31m-// ================= UPDATE ORDER STATUS ============[m
+[32m+[m[32m// ================= UPDATE ORDER STATUS (by order_id)[m
+ // ==================================================[m
+[31m-app.put("/api/orders/:id", (req, res) => {[m
+[32m+[m[32mapp.put("/api/orders/:order_id", (req, res) => {[m
+     const { status } = req.body;[m
+[31m-    const id = req.params.id;[m
+[32m+[m[32m    const orderId = req.params.order_id;[m
+     let sql = `UPDATE orders SET status = ?`;[m
+     let values = [status];[m
+     if (status === "Shipped") sql += `, shipped_date = NOW()`;[m
+     if (status === "Out For Delivery") sql += `, delivery_date = NOW()`;[m
+     if (status === "Delivered") sql += `, delivered_date = NOW()`;[m
+[31m-    sql += ` WHERE id = ?`;[m
+[31m-    values.push(id);[m
+[32m+[m[32m    sql += ` WHERE order_id = ?`;[m
+[32m+[m[32m    values.push(orderId);[m
+     db.query(sql, values, (err) => {[m
+         if (err) return res.status(500).json({ success: false, message: "Database Error" });[m
+         res.json({ success: true, message: "Order Status Updated" });[m
+     });[m
+ });[m
+ [m
+[32m+[m[32m// ==================================================[m
+[32m+[m[32m// ========= HELPER: group order rows by order_id ===[m
+[32m+[m[32m// ==================================================[m
+[32m+[m[32mfunction groupOrders(rows) {[m
+[32m+[m[32m    const grouped = {};[m
+[32m+[m[32m    rows.forEach((row) => {[m
+[32m+[m[32m        const key = row.order_id || `single-${row.id}`; // purnya (order_id nasलेल्या) orders sathi fallback[m
+[32m+[m[32m        if (!grouped[key]) {[m
+[32m+[m[32m            grouped[key] = {[m
+[32m+[m[32m                order_id: key,[m
+[32m+[m[32m                farmer_id: row.farmer_id,[m
+[32m+[m[32m                name: row.name,[m
+[32m+[m[32m                phone: row.phone,[m
+[32m+[m[32m                address: row.address,[m
+[32m+[m[32m                city: row.city,[m
+[32m+[m[32m                pincode: row.pincode,[m
+[32m+[m[32m                paymentMethod: row.paymentMethod,[m
+[32m+[m[32m                total: row.total,[m
+[32m+[m[32m                status: row.status || "Ordered",[m
+[32m+[m[32m                created_at: row.created_at,[m
+[32m+[m[32m                items: [],[m
+[32m+[m[32m            };[m
+[32m+[m[32m        }[m
+[32m+[m[32m        grouped[key].items.push({[m
+[32m+[m[32m            id: row.id,[m
+[32m+[m[32m            productName: row.productName,[m
+[32m+[m[32m            productImage: row.productImage,[m
+[32m+[m[32m            variant: row.variant,[m
+[32m+[m[32m            price: row.price,[m
+[32m+[m[32m            quantity: row.quantity,[m
+[32m+[m[32m            subtotal: row.subtotal,[m
+[32m+[m[32m        });[m
+[32m+[m[32m    });[m
+[32m+[m[32m    return Object.values(grouped);[m
+[32m+[m[32m}[m
+[32m+[m
+ // ==================================================[m
+ // ================= MANAGE USERS ===================[m
+ // ==================================================[m
