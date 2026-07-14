@@ -166,7 +166,6 @@ function ProductDetailPage() {
             </>
           )}
 
-          {/* ===== NEW: Custom Sections (Dynamic Title + Description) ===== */}
           {product.customSections && product.customSections.length > 0 &&
             product.customSections.map((sec, idx) => (
               <div key={idx}>
@@ -212,10 +211,10 @@ function ProductDetailPage() {
           related.map((item) => (
             <div
               key={item.id}
-             onClick={() => {
-  if (location.pathname.startsWith("/user")) navigate(`/user/product/${item.productId}`);
-  else navigate(`/product/${item.productId}`);
-}}
+              onClick={() => {
+                if (location.pathname.startsWith("/user")) navigate(`/user/product/${item.productId}`);
+                else navigate(`/product/${item.productId}`);
+              }}
               style={{ background: "#fff", padding: "15px", cursor: "pointer", borderRadius: "10px" }}
             >
               <img

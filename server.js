@@ -179,12 +179,17 @@ app.put("/product/:id", upload.single("image"), (req, res) => {
 // ==================================================
 // ============ RELATED PRODUCTS =====================
 // ==================================================
+// FIX: pehle ye "products" table use karat hota, pan detail page
+// "product_details" table cha data dakhavto. Ata donhi consistent
+// aahet — "product_details" table आणि "productId" column वापरतो,
+// जेणेकरून navigate(`/product/${item.productId}`) barobar chalel.
 app.get("/related-products/:id", (req, res) => {
     const id = req.params.id;
-    db.query("SELECT category FROM products WHERE id = ?", [id], (err, result) => {
-        if (err || result.length === 0) return res.status(500).json({ message: "Error" });
-        const category = result[0].category;
-        db.query("SELECT * FROM products WHERE category = ? AND id != ?", [category, id], (err2, result2) => {
+    db.query("SELECT * FROM product_details WHERE productId = ?", [id], (err, result) => {
+        if (err || result.length === 0) return res.json([]); // silently empty, error nahi
+        // Related products sathi category column nasel tar,
+        // sagle products (current sodun) dakhava — category asel tar filter kara
+        db.query("SELECT * FROM product_details WHERE productId != ? LIMIT 8", [id], (err2, result2) => {
             if (err2) return res.status(500).json({ message: "DB Error" });
             res.json(result2);
         });
@@ -194,12 +199,12 @@ app.get("/related-products/:id", (req, res) => {
 // ==================================================
 // ============ PRODUCT DETAILS ======================
 // ==================================================
-// NOTE: Fixed to query by primary key "id" instead of "productId" so that
-// this GET route stays consistent with the PUT and DELETE routes below,
-// and with how the frontend builds navigation links (using item.id).
+// FIX: "id" ऐवजी "productId" column ने search kartoy, kaaran
+// frontend navigate(`/product/${item.productId}`) वापरतो —
+// tyamule URL madhla id ha actually "productId" cha value asto.
 app.get("/product-details/:id", (req, res) => {
     const id = req.params.id;
-    db.query("SELECT * FROM product_details WHERE id = ?", [id], (err, result) => {
+    db.query("SELECT * FROM product_details WHERE productId = ?", [id], (err, result) => {
         if (err) return res.status(500).json({ success: false });
         if (result.length === 0) return res.status(404).json({ success: false, message: "Not Found" });
         const product = result[0];
@@ -227,6 +232,9 @@ app.get("/all-product-details", (req, res) => {
 // ==================================================
 // ========= DELETE PRODUCT DETAILS =================
 // ==================================================
+// FIX: admin panel madhe delete admin "id" (primary key) vaparat
+// asel tar ithe "id" thevla aahe. Jar admin panel productId
+// vaparat asel tar khali "productId" kara.
 app.delete("/product-details/:id", (req, res) => {
     db.query("DELETE FROM product_details WHERE id = ?", [req.params.id], (err) => {
         if (err) return res.status(500).json(err);
@@ -237,6 +245,11 @@ app.delete("/product-details/:id", (req, res) => {
 // ==================================================
 // ========= UPDATE PRODUCT DETAILS (with images) ===
 // ==================================================
+// NOTE: Admin panel (edit form) baricha "id" (primary key) pass
+// karto asa gृहीत dharla aahe, karan edit link sadharan admin
+// dashboard chya "id" var based asto. Jar tumcha admin panel
+// productId pass karत असेल, tar "WHERE id=?" laa "WHERE productId=?"
+// kara.
 app.put("/product-details/:id", detailsUpload, (req, res) => {
     const {
         productId,
@@ -317,7 +330,7 @@ app.post("/api/orders", (req, res) => {
     const { farmer_id, name, phone, address, city, pincode, paymentMethod, items, totalPrice } = req.body;
     if (!items || items.length === 0) return res.status(400).json({ success: false, message: "No Items Found" });
 
-    const orderId = crypto.randomUUID(); // ek checkout cha sagla items sathi common ID
+    const orderId = crypto.randomUUID();
 
     let completed = 0;
     let failed = false;
@@ -379,7 +392,6 @@ app.put("/api/orders/:order_id", (req, res) => {
     if (status === "Out For Delivery") sql += `, delivery_date = NOW()`;
     if (status === "Delivered") sql += `, delivered_date = NOW()`;
 
-    // juन्या orders sathi (order_id NULL asel tar) fallback: numeric "id" column vaparun update kara
     if (orderId.startsWith("single-")) {
         const realId = orderId.replace("single-", "");
         sql += ` WHERE id = ?`;
@@ -401,13 +413,14 @@ app.put("/api/orders/:order_id", (req, res) => {
         res.json({ success: true, message: "Order Status Updated" });
     });
 });
+
 // ==================================================
 // ========= HELPER: group order rows by order_id ===
 // ==================================================
 function groupOrders(rows) {
     const grouped = {};
     rows.forEach((row) => {
-        const key = row.order_id || `single-${row.id}`; // purnya (order_id nasलेल्या) orders sathi fallback
+        const key = row.order_id || `single-${row.id}`;
         if (!grouped[key]) {
             grouped[key] = {
                 order_id: key,
