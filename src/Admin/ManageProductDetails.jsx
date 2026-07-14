@@ -35,13 +35,21 @@ function ManageProductDetails() {
     image4: null,
   });
 
-  // Existing image URLs coming from the server (for preview)
+  // Existing image FILENAMES coming from the server (backend stores only
+  // the filename in the DB, e.g. "1737012345678.png")
   const [existingImages, setExistingImages] = useState({
     image1: "",
     image2: "",
     image3: "",
     image4: "",
   });
+
+  // Backend serves uploaded images at "<server root>/uploads/<filename>".
+  // BASE_URL usually already points to the server root used for API calls,
+  // so we reuse it here. If your BASE_URL includes a path like "/api",
+  // adjust this to the correct server origin.
+  const getImageUrl = (filename) =>
+    filename ? `${BASE_URL}/uploads/${filename}` : "";
 
   // ===== Fetch all products for the dropdown =====
   useEffect(() => {
@@ -50,17 +58,13 @@ function ManageProductDetails() {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/product-details`);
-      const list = res.data.products || res.data;
-      // Only set if it's actually an array, otherwise fall back to []
-      setProducts(Array.isArray(list) ? list : []);
+      const res = await axios.get(`${BASE_URL}/all-product-details`);
+      setProducts(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.log(err);
-      setProducts([]); // prevent crash - keep products as an array even on error
+      setProducts([]); // keep it an array even on failure - prevents .map crash
       if (err.response && err.response.status === 401) {
         alert("Session Expired. Please login again.");
-        // Optionally redirect to login:
-        // window.location.href = "/admin-login";
       } else {
         alert("Error Loading Product List");
       }
@@ -80,7 +84,7 @@ function ManageProductDetails() {
     try {
       setLoading(true);
       const res = await axios.get(`${BASE_URL}/product-details/${id}`);
-      const product = res.data.product || res.data;
+      const product = res.data;
 
       setFormData({
         productId: product.productId || "",
@@ -216,8 +220,13 @@ function ManageProductDetails() {
     );
     data.append("customSections", JSON.stringify(filledSections));
 
-    // Only send images that were actually replaced; backend should
-    // keep the old image if a new one isn't provided.
+    // Backend keeps the old image only if these old* fields are sent
+    // AND no new file is uploaded for that slot.
+    data.append("oldImage1", existingImages.image1 || "");
+    data.append("oldImage2", existingImages.image2 || "");
+    data.append("oldImage3", existingImages.image3 || "");
+    data.append("oldImage4", existingImages.image4 || "");
+
     if (images.image1) data.append("image1", images.image1);
     if (images.image2) data.append("image2", images.image2);
     if (images.image3) data.append("image3", images.image3);
@@ -275,7 +284,7 @@ function ManageProductDetails() {
       >
         <option value="">-- Select Product to Edit --</option>
         {products.map((p) => (
-          <option key={p._id || p.productId} value={p._id || p.productId}>
+          <option key={p.id} value={p.id}>
             {p.productName ? `${p.productId} - ${p.productName}` : p.productId}
           </option>
         ))}
@@ -453,7 +462,7 @@ function ManageProductDetails() {
             <div key={key} style={styles.imageBox}>
               {existingImages[key] && (
                 <img
-                  src={existingImages[key]}
+                  src={getImageUrl(existingImages[key])}
                   alt={key}
                   style={styles.previewImg}
                 />
