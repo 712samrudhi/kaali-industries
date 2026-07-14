@@ -51,10 +51,19 @@ function ManageProductDetails() {
   const fetchProducts = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/product-details`);
-      setProducts(res.data.products || res.data || []);
+      const list = res.data.products || res.data;
+      // Only set if it's actually an array, otherwise fall back to []
+      setProducts(Array.isArray(list) ? list : []);
     } catch (err) {
       console.log(err);
-      alert("Error Loading Product List");
+      setProducts([]); // prevent crash - keep products as an array even on error
+      if (err.response && err.response.status === 401) {
+        alert("Session Expired. Please login again.");
+        // Optionally redirect to login:
+        // window.location.href = "/admin-login";
+      } else {
+        alert("Error Loading Product List");
+      }
     }
   };
 
