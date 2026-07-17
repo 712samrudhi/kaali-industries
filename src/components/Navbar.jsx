@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaSearch, FaBars, FaTimes } from "react-icons/fa";
+import { useLanguage } from "../context/LanguageContext";
 
 const pageRoutes = {
   home: "/",
@@ -10,10 +11,45 @@ const pageRoutes = {
   contact: "/contact",
 };
 
+const texts = {
+  en: {
+    contact: "CONTACT US",
+    home: "Home",
+    about: "About",
+    products: "Products",
+    services: "Services",
+    search: "Search here...",
+    login: "Login",
+    admin: "Admin",
+  },
+  mr: {
+    contact: "संपर्क करा",
+    home: "मुख्यपृष्ठ",
+    about: "आमच्याबद्दल",
+    products: "उत्पादने",
+    services: "सेवा",
+    search: "शोधा...",
+    login: "लॉगिन",
+    admin: "अ‍ॅडमिन",
+  },
+  hi: {
+    contact: "संपर्क करें",
+    home: "होम",
+    about: "हमारे बारे में",
+    products: "उत्पाद",
+    services: "सेवाएं",
+    search: "खोजें...",
+    login: "लॉगिन",
+    admin: "एडमिन",
+  },
+};
+
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { lang, setLang } = useLanguage();
+  const t = texts[lang];
 
   const handleSearch = () => {
     const q = searchQuery.trim().toLowerCase();
@@ -71,6 +107,11 @@ function Navbar() {
           border-radius:20px;
           cursor:pointer;
           font-weight:600;
+        }
+
+        .lang-buttons button.active{
+          background:#ff7a00;
+          color:white;
         }
 
         .navbar{
@@ -221,13 +262,28 @@ function Navbar() {
       {/* Top Bar */}
       <div className="top-bar">
         <Link to="/contact" className="contact-link">
-          CONTACT US
+          {t.contact}
         </Link>
 
         <div className="lang-buttons">
-          <button>English</button>
-          <button>Marathi</button>
-          <button>Hindi</button>
+          <button
+            className={lang === "en" ? "active" : ""}
+            onClick={() => setLang("en")}
+          >
+            English
+          </button>
+          <button
+            className={lang === "mr" ? "active" : ""}
+            onClick={() => setLang("mr")}
+          >
+            Marathi
+          </button>
+          <button
+            className={lang === "hi" ? "active" : ""}
+            onClick={() => setLang("hi")}
+          >
+            Hindi
+          </button>
         </div>
       </div>
 
@@ -243,10 +299,10 @@ function Navbar() {
         </div>
 
         <div className={`menu ${menuOpen ? "active" : ""}`}>
-          <Link to="/">Home</Link>
-          <Link to="/about">About</Link>
-          <Link to="/products">Products</Link>
-          <Link to="/services">Services</Link>
+          <Link to="/">{t.home}</Link>
+          <Link to="/about">{t.about}</Link>
+          <Link to="/products">{t.products}</Link>
+          <Link to="/services">{t.services}</Link>
         </div>
 
         <div className="right-section">
@@ -254,7 +310,7 @@ function Navbar() {
           <div className="search-box">
             <input
               type="text"
-              placeholder="Search here..."
+              placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -265,11 +321,11 @@ function Navbar() {
           </div>
 
           <Link to="/login">
-            <button className="login-btn">Login</button>
+            <button className="login-btn">{t.login}</button>
           </Link>
 
           <Link to="/admin">
-            <button className="admin-btn">Admin</button>
+            <button className="admin-btn">{t.admin}</button>
           </Link>
 
         </div>

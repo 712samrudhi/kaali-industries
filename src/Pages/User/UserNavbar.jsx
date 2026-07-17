@@ -9,6 +9,7 @@ import {
   FaBars,
   FaTimes
 } from "react-icons/fa";
+import { useLanguage } from "../../context/LanguageContext";
 
 const pageRoutes = {
   home: "/user",
@@ -19,6 +20,48 @@ const pageRoutes = {
   contact: "/user/contact",
 };
 
+const texts = {
+  en: {
+    contact: "CONTACT US",
+    locations: "INDIA LOCATIONS",
+    home: "Home",
+    about: "About",
+    products: "Products",
+    services: "Services",
+    feedback: "Feedback",
+    search: "Search here...",
+    myProfile: "My Profile",
+    myOrders: "My Orders",
+    logout: "Logout",
+  },
+  mr: {
+    contact: "संपर्क करा",
+    locations: "भारतातील ठिकाणे",
+    home: "मुख्यपृष्ठ",
+    about: "आमच्याबद्दल",
+    products: "उत्पादने",
+    services: "सेवा",
+    feedback: "अभिप्राय",
+    search: "शोधा...",
+    myProfile: "माझी प्रोफाईल",
+    myOrders: "माझ्या ऑर्डर्स",
+    logout: "लॉगआउट",
+  },
+  hi: {
+    contact: "संपर्क करें",
+    locations: "भारत स्थान",
+    home: "होम",
+    about: "हमारे बारे में",
+    products: "उत्पाद",
+    services: "सेवाएं",
+    feedback: "प्रतिक्रिया",
+    search: "खोजें...",
+    myProfile: "मेरी प्रोफाइल",
+    myOrders: "मेरे ऑर्डर",
+    logout: "लॉगआउट",
+  },
+};
+
 function UserNavbar(){
 
 const [open,setOpen]=useState(false);
@@ -26,6 +69,8 @@ const [menuOpen,setMenuOpen]=useState(false);
 const [searchQuery,setSearchQuery]=useState("");
 
 const navigate=useNavigate();
+const { lang, setLang } = useLanguage();
+const t = texts[lang];
 
 
 const user = JSON.parse(localStorage.getItem("farmer")) || {};
@@ -123,6 +168,14 @@ padding:7px 15px;
 border-radius:20px;
 cursor:pointer;
 font-weight:bold;
+
+}
+
+
+.lang-btn.active{
+
+background:#ff7a00;
+color:white;
 
 }
 
@@ -499,7 +552,7 @@ className="top-link"
 to="/user/contact"
 >
 
-CONTACT US
+{t.contact}
 
 </Link>
 
@@ -509,7 +562,7 @@ className="top-link"
 to="/locations"
 >
 
-INDIA LOCATIONS
+{t.locations}
 
 </Link>
 
@@ -520,15 +573,24 @@ INDIA LOCATIONS
 
 <div className="language">
 
-<button className="lang-btn">
+<button
+  className={`lang-btn ${lang === "en" ? "active" : ""}`}
+  onClick={() => setLang("en")}
+>
 English
 </button>
 
-<button className="lang-btn">
+<button
+  className={`lang-btn ${lang === "mr" ? "active" : ""}`}
+  onClick={() => setLang("mr")}
+>
 Marathi
 </button>
 
-<button className="lang-btn">
+<button
+  className={`lang-btn ${lang === "hi" ? "active" : ""}`}
+  onClick={() => setLang("hi")}
+>
 Hindi
 </button>
 
@@ -573,35 +635,35 @@ alt="logo"
 
 <li>
 <Link to="/user">
-Home
+{t.home}
 </Link>
 </li>
 
 
 <li>
 <Link to="/user/about">
-About
+{t.about}
 </Link>
 </li>
 
 
 <li>
 <Link to="/user/products">
-Products
+{t.products}
 </Link>
 </li>
 
 
 <li>
 <Link to="/user/services">
-Services
+{t.services}
 </Link>
 </li>
 
 
 <li>
 <Link to="/user/feedback">
-Feedback
+{t.feedback}
 </Link>
 </li>
 
@@ -622,7 +684,7 @@ Feedback
 
 
 <input
-  placeholder="Search here..."
+  placeholder={t.search}
   value={searchQuery}
   onChange={(e)=>setSearchQuery(e.target.value)}
   onKeyDown={handleKeyDown}
@@ -696,7 +758,7 @@ to="/user/profile"
 
 <FaUser/>
 
-My Profile
+{t.myProfile}
 
 </Link>
 
@@ -713,7 +775,7 @@ to="/user/orders"
 
 <FaBox/>
 
-My Orders
+{t.myOrders}
 
 </Link>
 
@@ -730,7 +792,7 @@ onClick={handleLogout}
 
 <FaSignOutAlt/>
 
-Logout
+{t.logout}
 
 </div>
 

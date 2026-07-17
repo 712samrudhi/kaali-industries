@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import { LanguageProvider } from "./context/LanguageContext";
 
 // COMMON
 import Navbar from "./components/Navbar";
@@ -9,7 +9,6 @@ import ProductList from "./components/Productlist";
 import Contact from "./components/contact";
 import WhatsAppButton from "./components/WhatsAppButton";
 import Services from "./components/Services";
-
 
 // USER
 import UserNavbar from "./Pages/User/UserNavbar";
@@ -21,24 +20,18 @@ import Checkout from "./Pages/User/Checkout";
 import UserAbout from "./Pages/User/userabout";
 import OrderPage from "./Pages/User/OrderPage";
 
-
-
 // PAGES
 import About from "./Pages/About";
-
 import FarmerFeedback from "./Pages/FarmerFeedback";
 import LoginRegister from "./Pages/LoginRegister";
 import ProductDetailPage from "./Pages/ProductDetailPage";
 import SearchResults from "./Pages/SearchResults";
-
-
 
 // PRODUCTS
 import Fertilizer from "./Pages/products/Fertilizer";
 import Seed from "./Pages/products/Seed";
 import Food from "./Pages/products/Food";
 import Vegetable from "./Pages/products/Vegetable";
-
 
 // ADMIN
 import AdminLogin from "./Admin/AdminLogin";
@@ -53,599 +46,323 @@ import AdminFeedback from "./Admin/AdminFeedback";
 import ManageOrders from "./Admin/ManageOrders";
 
 function Home(){
-
-return(
-<>
-<ProductList/>
-<Footer/>
-</>
-)
-
+  return(
+    <>
+      <ProductList/>
+      <Footer/>
+    </>
+  )
 }
-
-
-
-
 
 function App(){
+  return(
+    <LanguageProvider>
+    <BrowserRouter>
 
+    <Routes>
 
-return(
+    {/* HOME */}
+    <Route
+      path="/"
+      element={
+        <>
+          <Navbar/>
+          <Home/>
+        </>
+      }
+    />
 
-<BrowserRouter>
+    {/* LOGIN */}
+    <Route
+      path="/login"
+      element={
+        <>
+          <Navbar/>
+          <LoginRegister/>
+        </>
+      }
+    />
 
+    {/* CONTACT NORMAL */}
+    <Route
+      path="/contact"
+      element={
+        <>
+          <Navbar/>
+          <Contact/>
+          <Footer/>
+        </>
+      }
+    />
 
-<Routes>
+    {/* CONTACT USER */}
+    <Route
+      path="/user/contact"
+      element={
+        <>
+          <UserNavbar/>
+          <Contact/>
+          <Footer/>
+        </>
+      }
+    />
 
+    {/* ABOUT */}
+    <Route
+      path="/about"
+      element={
+        <>
+          <Navbar/>
+          <About/>
+        </>
+      }
+    />
 
+    <Route
+      path="/services"
+      element={
+        <>
+          <Navbar />
+          <Services />
+          <Footer />
+        </>
+      }
+    />
+    <Route
+      path="/user/services"
+      element={
+        <>
+          <UserNavbar />
+          <Services />
+          <Footer />
+        </>
+      }
+    />
 
-{/* HOME */}
+    {/* USER HOME */}
+    <Route
+      path="/user"
+      element={
+        <>
+          <UserNavbar/>
+          <UserIndex/>
+          <Footer/>
+        </>
+      }
+    />
 
-<Route
+    {/* USER ABOUT */}
+    <Route
+      path="/user/about"
+      element={
+        <>
+          <UserNavbar/>
+          <UserAbout/>
+        </>
+      }
+    />
 
-path="/"
+    {/* PRODUCTS */}
+    <Route
+      path="/products"
+      element={
+        <>
+          <Navbar/>
+          <UserProductPage/>
+        </>
+      }
+    />
 
-element={
-<>
-<Navbar/>
-<Home/>
+    <Route
+      path="/user/products"
+      element={
+        <>
+          <UserNavbar/>
+          <UserProductPage/>
+        </>
+      }
+    />
 
-</>
+    {/* PRODUCT DETAILS */}
+    <Route
+      path="/product/:id"
+      element={
+        <>
+          <Navbar/>
+          <ProductDetailPage/>
+        </>
+      }
+    />
+
+    <Route
+      path="/user/product/:id"
+      element={
+        <>
+          <UserNavbar/>
+          <ProductDetailPage/>
+        </>
+      }
+    />
+
+    {/* SEARCH */}
+    <Route
+      path="/search"
+      element={
+        <>
+          <Navbar/>
+          <SearchResults/>
+          <Footer/>
+        </>
+      }
+    />
+
+    <Route
+      path="/user/search"
+      element={
+        <>
+          <UserNavbar/>
+          <SearchResults/>
+          <Footer/>
+        </>
+      }
+    />
+
+    {/* USER PAGES */}
+    <Route
+      path="/user/profile"
+      element={
+        <>
+          <UserNavbar/>
+          <UserProfile/>
+        </>
+      }
+    />
+
+    <Route
+      path="/cart"
+      element={
+        <>
+          <UserNavbar/>
+          <Cart/>
+        </>
+      }
+    />
+
+    <Route
+      path="/checkout"
+      element={
+        <>
+          <UserNavbar />
+          <Checkout />
+        </>
+      }
+    />
+
+    <Route
+      path="/user/orders"
+      element={
+        <>
+          <UserNavbar/>
+          <OrderPage/>
+        </>
+      }
+    />
+
+    {/* CATEGORY */}
+    <Route
+      path="/fertilizer"
+      element={
+        <>
+          <Navbar/>
+          <Fertilizer/>
+        </>
+      }
+    />
+
+    <Route
+      path="/seed"
+      element={
+        <>
+          <Navbar/>
+          <Seed/>
+        </>
+      }
+    />
+
+    <Route
+      path="/food"
+      element={
+        <>
+          <Navbar/>
+          <Food/>
+        </>
+      }
+    />
+
+    <Route
+      path="/vegetable"
+      element={
+        <>
+          <Navbar/>
+          <Vegetable/>
+        </>
+      }
+    />
+
+    {/* OTHER */}
+    <Route
+      path="/feedback"
+      element={
+        <>
+          <Navbar/>
+          <FarmerFeedback/>
+          <Footer />
+        </>
+      }
+    />
+
+    <Route
+      path="/user/feedback"
+      element={
+        <>
+          <UserNavbar />
+          <FarmerFeedback />
+          <Footer />
+        </>
+      }
+    />
+
+    {/* ADMIN */}
+    <Route path="/admin" element={<AdminLogin/>} />
+    <Route path="/admin/login" element={<AdminLogin/>} />
+    <Route path="/admin/dashboard" element={<AdminDashboard/>} />
+    <Route path="/admin/add-product" element={<AddProduct/>} />
+    <Route path="/admin/product-details" element={<ProductDetails/>} />
+    <Route path="/admin/products" element={<ManageProducts/>} />
+    <Route path="/admin/users" element={<ManageUsers/>} />
+    <Route path="/admin/manage-products" element={<ManageProducts/>} />
+    <Route path="/admin/manage-users" element={<ManageUsers/>} />
+    <Route path="/admin/manage-product-details" element={<ManageProductDetails />} />
+    <Route path="/admin/contact-messages" element={<ManageContactMessages />} />
+    <Route path="/admin/feedback" element={<AdminFeedback />} />
+    <Route path="/admin/orders" element={<ManageOrders />} />
+
+    {/* 404 */}
+    <Route
+      path="*"
+      element={
+        <div style={{ textAlign:"center", padding:"50px" }}>
+          <h1>404 - Page Not Found</h1>
+        </div>
+      }
+    />
+
+    </Routes>
+    <WhatsAppButton />
+
+    </BrowserRouter>
+    </LanguageProvider>
+  )
 }
-
-/>
-
-
-
-
-{/* LOGIN */}
-
-<Route
-
-path="/login"
-
-element={
-<>
-<Navbar/>
-<LoginRegister/>
-</>
-}
-
-/>
-
-
-
-
-
-{/* CONTACT NORMAL */}
-
-<Route
-
-path="/contact"
-
-element={
-<>
-<Navbar/>
-<Contact/>
-<Footer/>
-</>
-}
-
-/>
-
-
-
-
-
-{/* CONTACT USER */}
-
-<Route
-
-path="/user/contact"
-
-element={
-<>
-<UserNavbar/>
-<Contact/>
-<Footer/>
-</>
-}
-
-/>
-
-
-
-
-
-{/* ABOUT */}
-
-<Route
-
-path="/about"
-
-element={
-<>
-<Navbar/>
-<About/>
-</>
-}
-
-/>
-
-
-<Route
-  path="/services"
-  element={
-    <>
-      <Navbar />
-      <Services />
-      <Footer />
-    </>
-  }
-/>
-<Route
-  path="/user/services"
-  element={
-    <>
-      <UserNavbar />
-      <Services />
-      <Footer />
-    </>
-  }
-/>
-
-{/* USER HOME */}
-
-<Route
-
-path="/user"
-
-element={
-<>
-<UserNavbar/>
-<UserIndex/>
-<Footer/>
-</>
-}
-
-/>
-
-
-
-
-
-{/* USER ABOUT */}
-
-<Route
-
-path="/user/about"
-
-element={
-<>
-<UserNavbar/>
-<UserAbout/>
-</>
-}
-
-/>
-
-
-
-
-
-
-{/* PRODUCTS */}
-
-<Route
-
-path="/products"
-
-element={
-<>
-<Navbar/>
-<UserProductPage/>
-</>
-}
-
-/>
-
-
-
-
-<Route
-
-path="/user/products"
-
-element={
-<>
-<UserNavbar/>
-<UserProductPage/>
-</>
-}
-
-/>
-
-
-
-
-
-
-{/* PRODUCT DETAILS */}
-
-
-<Route
-
-path="/product/:id"
-
-element={
-<>
-<Navbar/>
-<ProductDetailPage/>
-</>
-}
-
-/>
-
-
-
-
-<Route
-
-path="/user/product/:id"
-
-element={
-<>
-<UserNavbar/>
-<ProductDetailPage/>
-</>
-}
-
-/>
-
-
-
-
-{/* SEARCH */}
-
-<Route
-  path="/search"
-  element={
-    <>
-      <Navbar/>
-      <SearchResults/>
-      <Footer/>
-    </>
-  }
-/>
-
-<Route
-  path="/user/search"
-  element={
-    <>
-      <UserNavbar/>
-      <SearchResults/>
-      <Footer/>
-    </>
-  }
-/>
-
-
-
-
-
-
-
-{/* USER PAGES */}
-
-
-
-<Route
-
-path="/user/profile"
-
-element={
-<>
-<UserNavbar/>
-<UserProfile/>
-</>
-}
-
-/>
-
-
-
-<Route
-
-path="/cart"
-
-element={
-<>
-<UserNavbar/>
-<Cart/>
-</>
-}
-
-/>
-
-
-
-<Route
-  path="/checkout"
-  element={
-    <>
-      <UserNavbar />
-      <Checkout />
-    </>
-  }
-/>
-
-
-
-<Route
-
-path="/user/orders"
-
-element={
-<>
-<UserNavbar/>
-<OrderPage/>
-</>
-}
-
-/>
-
-
-
-
-
-
-{/* CATEGORY */}
-
-
-
-<Route
-
-path="/fertilizer"
-
-element={
-<>
-<Navbar/>
-<Fertilizer/>
-</>
-}
-
-/>
-
-
-
-
-<Route
-
-path="/seed"
-
-element={
-<>
-<Navbar/>
-<Seed/>
-</>
-}
-
-/>
-
-
-
-<Route
-
-path="/food"
-
-element={
-<>
-<Navbar/>
-<Food/>
-</>
-}
-
-/>
-
-
-
-<Route
-
-path="/vegetable"
-
-element={
-<>
-<Navbar/>
-<Vegetable/>
-</>
-}
-
-/>
-
-
-
-
-
-
-
-
-{/* OTHER */}
-
-
-
-
-
-
-
-
-<Route
-
-path="/feedback"
-
-element={
-<>
-<Navbar/>
-<FarmerFeedback/>
-  <Footer />
-</>
-}
-
-/>
-
-<Route
-  path="/user/feedback"
-  element={
-    <>
-      <UserNavbar />
-      <FarmerFeedback />
-      <Footer />
-    </>
-  }
-/>
-
-
-
-
-
-
-{/* ADMIN */}
-
-
-<Route
-
-path="/admin"
-
-element={<AdminLogin/>}
-
-/>
-
-
-<Route
-
-path="/admin/login"
-
-element={<AdminLogin/>}
-
-/>
-
-
-<Route
-
-path="/admin/dashboard"
-
-element={<AdminDashboard/>}
-
-/>
-
-
-<Route
-
-path="/admin/add-product"
-
-element={<AddProduct/>}
-
-/>
-
-
-<Route
-
-path="/admin/product-details"
-
-element={<ProductDetails/>}
-
-/>
-
-
-<Route
-
-path="/admin/products"
-
-element={<ManageProducts/>}
-
-/>
-
-
-<Route
-
-path="/admin/users"
-
-element={<ManageUsers/>}
-
-/>
-
-
-<Route
-
-path="/admin/manage-products"
-
-element={<ManageProducts/>}
-
-/>
-
-
-<Route
-
-path="/admin/manage-users"
-
-element={<ManageUsers/>}
-
-/>
-
-<Route
-  path="/admin/manage-product-details"
-  element={<ManageProductDetails />}
-/>
-<Route
-  path="/admin/contact-messages"
-  element={<ManageContactMessages />}
-/>
-<Route
-  path="/admin/feedback"
-  element={<AdminFeedback />}
-/>
-<Route
-  path="/admin/orders"
-  element={<ManageOrders />}
-/>
-{/* 404 */}
-
-<Route
-
-path="*"
-
-element={
-
-<div
-style={{
-textAlign:"center",
-padding:"50px"
-}}
->
-
-<h1>
-404 - Page Not Found
-</h1>
-
-
-</div>
-
-}
-
-/>
-
-
-
-
-</Routes>
-<WhatsAppButton />
-
-</BrowserRouter>
-
-
-)
-
-
-}
-
 
 export default App;
