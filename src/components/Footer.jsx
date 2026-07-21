@@ -1,39 +1,68 @@
 import React from "react";
+import { useLanguage } from "../context/LanguageContext";
+
+const texts = {
+  en: {
+    title: "Kaali Industries",
+    tagline: "Agricultural solutions for better crop productivity and sustainable farming.",
+    phone: "📞 Phone: 7030056556",
+    email: "✉ Email: nutrient0009@gmail.com",
+    address: "📍 C1-303, Sun Empire, Sun City Road, Sinhgad Road, Pune - 411051",
+    copyright: "© 2026 Kaali Industries. All Rights Reserved.",
+  },
+  mr: {
+    title: "काली इंडस्ट्रीज",
+    tagline: "उत्तम पीक उत्पादनासाठी आणि शाश्वत शेतीसाठी कृषी उपाय.",
+    phone: "📞 फोन: 7030056556",
+    email: "✉ ईमेल: nutrient0009@gmail.com",
+    address: "📍 सी1-३०३, सन एम्पायर, सन सिटी रोड, सिंहगड रोड, पुणे - ४११०५१",
+    copyright: "© 2026 काली इंडस्ट्रीज. सर्व हक्क राखीव.",
+  },
+  hi: {
+    title: "काली इंडस्ट्रीज",
+    tagline: "बेहतर फसल उत्पादकता और टिकाऊ खेती के लिए कृषि समाधान।",
+    phone: "📞 फोन: 7030056556",
+    email: "✉ ईमेल: nutrient0009@gmail.com",
+    address: "📍 सी1-303, सन एम्पायर, सन सिटी रोड, सिंहगड रोड, पुणे - 411051",
+    copyright: "© 2026 काली इंडस्ट्रीज. सर्वाधिकार सुरक्षित।",
+  },
+};
 
 function Footer() {
+  const { lang } = useLanguage();
+  const t = texts[lang];
+
   return (
     <footer style={styles.footer}>
 
       <h2 style={styles.title}>
-        Kaali Industries
+        {t.title}
       </h2>
 
       <p>
-        Agricultural solutions for better crop productivity
-        and sustainable farming.
+        {t.tagline}
       </p>
 
 
       <div style={styles.details}>
 
         <p>
-          📞 Phone: 7030056556
+          {t.phone}
         </p>
 
         <p>
-          ✉ Email: nutrient0009@gmail.com
+          {t.email}
         </p>
 
         <p>
-          📍 C1-303, Sun Empire, Sun City Road,
-          Sinhgad Road, Pune - 411051
+          {t.address}
         </p>
 
       </div>
 
 
       <p style={styles.copyright}>
-        © 2026 Kaali Industries. All Rights Reserved.
+        {t.copyright}
       </p>
 
     </footer>
