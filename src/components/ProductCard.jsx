@@ -1,7 +1,15 @@
-
 import React from "react";
+import { useLanguage } from "../context/LanguageContext";
+
+const texts = {
+  en: { category: "Category" },
+  mr: { category: "श्रेणी" },
+  hi: { category: "श्रेणी" },
+};
 
 function ProductCard({ product }) {
+  const { lang } = useLanguage();
+  const t = texts[lang];
 
   return (
 
@@ -29,7 +37,7 @@ function ProductCard({ product }) {
       <h3>{product.name}</h3>
 
       <p>
-        Category : {product.category}
+        {t.category} : {product.category}
       </p>
 
       <h2 style={{ color: "green" }}>

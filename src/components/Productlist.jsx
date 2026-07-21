@@ -1,6 +1,28 @@
 import React from "react";
+import { useLanguage } from "../context/LanguageContext";
+
+const texts = {
+  en: {
+    welcome: "Welcome to Organic Farming 🌿",
+    tagline: "Fresh Products Direct from Farmers",
+    button: "Get Started",
+  },
+  mr: {
+    welcome: "सेंद्रिय शेतीमध्ये आपले स्वागत आहे 🌿",
+    tagline: "शेतकऱ्यांकडून थेट ताजी उत्पादने",
+    button: "सुरु करा",
+  },
+  hi: {
+    welcome: "जैविक खेती में आपका स्वागत है 🌿",
+    tagline: "किसानों से सीधे ताज़ा उत्पाद",
+    button: "शुरू करें",
+  },
+};
 
 function ProductList() {
+  const { lang } = useLanguage();
+  const t = texts[lang];
+
   return (
     <div style={{ margin: 0, padding: 0 }}>
 
@@ -60,7 +82,7 @@ function ProductList() {
               marginBottom: "10px"
             }}
           >
-            Welcome to Organic Farming 🌿
+            {t.welcome}
           </h1>
 
 
@@ -69,7 +91,7 @@ function ProductList() {
               fontSize: "18px"
             }}
           >
-            Fresh Products Direct from Farmers
+            {t.tagline}
           </p>
 
 
@@ -85,7 +107,7 @@ function ProductList() {
               cursor: "pointer"
             }}
           >
-            Get Started
+            {t.button}
           </button>
 
 
