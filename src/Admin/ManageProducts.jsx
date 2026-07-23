@@ -9,14 +9,18 @@ function ManageProducts() {
   const [newImage, setNewImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [oldImage, setOldImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => { getProducts(); }, []);
+  useEffect(() => {
+    getProducts();
+  }, []);
 
   const getProducts = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/api/products`);
       setProducts(res.data);
     } catch (error) {
+      console.log(error);
       alert("Failed to Load Products");
     }
   };
@@ -24,47 +28,69 @@ function ManageProducts() {
   const deleteProduct = async (id) => {
     if (!window.confirm("Delete Product?")) return;
     try {
-      await axios.delete(`${BASE_URL}/product/${id}`);
-      alert("Product Deleted");
+      await axios.delete(`${BASE_URL}/api/product/${id}`);
+      alert("Product Deleted ✅");
       getProducts();
     } catch (error) {
+      console.log(error);
       alert("Delete Failed");
     }
   };
 
   const editProduct = (product) => {
     setEditId(product.id);
-    setForm({ name: product.name, price: product.price, category: product.category });
+    setForm({
+      name: product.name,
+      price: product.price,
+      category: product.category,
+    });
     setOldImage(product.image);
     setPreview(`${BASE_URL}/uploads/${product.image}`);
     setNewImage(null);
   };
 
   const updateProduct = async () => {
+    if (!form.name.trim() || !form.price || !form.category) {
+      alert("कृपया सर्व fields भरा");
+      return;
+    }
+
     try {
+      setLoading(true);
+
       const formData = new FormData();
-      formData.append("name", form.name);
+      formData.append("name", form.name.trim());
       formData.append("price", form.price);
       formData.append("category", form.category);
       if (newImage) {
         formData.append("image", newImage);
       }
 
-      await axios.put(`${BASE_URL}/product/${editId}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+      await axios.put(`${BASE_URL}/api/product/${editId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       alert("Product Updated ✅");
-      setEditId(null);
-      setForm({ name: "", price: "", category: "" });
-      setNewImage(null);
-      setPreview(null);
-      setOldImage(null);
+      cancelEdit();
       getProducts();
     } catch (error) {
-      console.log(error);
-      alert("Update Failed");
+      console.log(error.response?.data || error.message);
+      const msg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Update Failed";
+      alert(msg);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const cancelEdit = () => {
+    setEditId(null);
+    setForm({ name: "", price: "", category: "" });
+    setNewImage(null);
+    setPreview(null);
+    setOldImage(null);
   };
 
   return (
@@ -72,23 +98,40 @@ function ManageProducts() {
       <h1 style={{ textAlign: "center", color: "#16a34a" }}>Manage Products</h1>
 
       {editId && (
-        <div style={{ border: "1px solid #ddd", padding: "20px", marginBottom: "30px", borderRadius: "10px" }}>
+        <div
+          style={{
+            border: "1px solid #ddd",
+            padding: "20px",
+            marginBottom: "30px",
+            borderRadius: "10px",
+          }}
+        >
           <h3>Edit Product</h3>
 
           {/* Image Preview */}
           <div style={{ marginBottom: "15px" }}>
-            <p style={{ marginBottom: "5px", fontWeight: "bold" }}>Current Image:</p>
+            <p style={{ marginBottom: "5px", fontWeight: "bold" }}>
+              Current Image:
+            </p>
             <img
               src={preview}
               alt="preview"
-              style={{ width: "150px", height: "150px", objectFit: "cover", borderRadius: "10px", border: "2px solid #ddd" }}
-              onError={(e) => e.target.style.display = "none"}
+              style={{
+                width: "150px",
+                height: "150px",
+                objectFit: "cover",
+                borderRadius: "10px",
+                border: "2px solid #ddd",
+              }}
+              onError={(e) => (e.target.style.display = "none")}
             />
           </div>
 
           {/* Image Upload */}
           <div style={{ marginBottom: "10px" }}>
-            <p style={{ marginBottom: "5px", fontWeight: "bold" }}>Change Image (optional):</p>
+            <p style={{ marginBottom: "5px", fontWeight: "bold" }}>
+              Change Image (optional):
+            </p>
             <input
               type="file"
               accept="image/*"
@@ -116,6 +159,8 @@ function ManageProducts() {
             placeholder="Price"
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
+            min="0"
+            step="0.01"
             style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
           />
 
@@ -124,6 +169,7 @@ function ManageProducts() {
             onChange={(e) => setForm({ ...form, category: e.target.value })}
             style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
           >
+            <option value="">Select Category</option>
             <option value="fertilizer">Fertilizer</option>
             <option value="seed">Seed</option>
             <option value="food">Food</option>
@@ -132,39 +178,95 @@ function ManageProducts() {
 
           <button
             onClick={updateProduct}
-            style={{ background: "#16a34a", color: "#fff", border: "none", padding: "10px 20px", cursor: "pointer", borderRadius: "5px", marginRight: "10px" }}
+            disabled={loading}
+            style={{
+              background: "#16a34a",
+              color: "#fff",
+              border: "none",
+              padding: "10px 20px",
+              cursor: "pointer",
+              borderRadius: "5px",
+              marginRight: "10px",
+            }}
           >
-            Update Product ✅
+            {loading ? "Updating..." : "Update Product ✅"}
           </button>
 
           <button
-            onClick={() => { setEditId(null); setPreview(null); setNewImage(null); }}
-            style={{ background: "#dc2626", color: "#fff", border: "none", padding: "10px 20px", cursor: "pointer", borderRadius: "5px" }}
+            onClick={cancelEdit}
+            style={{
+              background: "#dc2626",
+              color: "#fff",
+              border: "none",
+              padding: "10px 20px",
+              cursor: "pointer",
+              borderRadius: "5px",
+            }}
           >
             Cancel ❌
           </button>
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: "20px" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
+          gap: "20px",
+        }}
+      >
         {products.map((p) => (
-          <div key={p.id} style={{ border: "1px solid #ddd", borderRadius: "10px", padding: "15px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
+          <div
+            key={p.id}
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: "10px",
+              padding: "15px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+            }}
+          >
             <img
               src={`${BASE_URL}/uploads/${p.image}`}
               alt={p.name}
-              style={{ width: "100%", height: "220px", objectFit: "cover", borderRadius: "10px" }}
+              style={{
+                width: "100%",
+                height: "220px",
+                objectFit: "cover",
+                borderRadius: "10px",
+              }}
             />
             <h3>{p.name}</h3>
-            <p><b>₹ {p.price}</b></p>
+            <p>
+              <b>₹ {p.price}</b>
+            </p>
             <p>Category: {p.category}</p>
             <button
               onClick={() => editProduct(p)}
-              style={{ background: "#2563eb", color: "#fff", border: "none", padding: "10px", marginRight: "10px", cursor: "pointer", borderRadius: "5px" }}
-            >Edit</button>
+              style={{
+                background: "#2563eb",
+                color: "#fff",
+                border: "none",
+                padding: "10px",
+                marginRight: "10px",
+                cursor: "pointer",
+                borderRadius: "5px",
+              }}
+            >
+              Edit
+            </button>
             <button
               onClick={() => deleteProduct(p.id)}
-              style={{ background: "#dc2626", color: "#fff", border: "none", padding: "10px", cursor: "pointer", borderRadius: "5px" }}
-            >Delete</button>
+              style={{
+                background: "#dc2626",
+                color: "#fff",
+                border: "none",
+                padding: "10px",
+                cursor: "pointer",
+                borderRadius: "5px",
+              }}
+            >
+              Delete
+            </button>
           </div>
         ))}
       </div>
