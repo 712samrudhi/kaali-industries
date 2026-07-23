@@ -170,10 +170,13 @@ function ManageProducts() {
             style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
           >
             <option value="">Select Category</option>
-            <option value="fertilizer">Fertilizer</option>
-            <option value="seed">Seed</option>
-            <option value="food">Food</option>
-            <option value="vegetable">Vegetable</option>
+            <option value="Fertilizer">Fertilizer</option>
+            <option value="Biostimulant">Biostimulant</option>
+            <option value="Seeds">Seeds</option>
+            <option value="Pesticides">Pesticides</option>
+            <option value="Herbicide">Herbicide</option>
+            <option value="Fungicide">Fungicide</option>
+            <option value="PGR">PGR</option>
           </select>
 
           <button
