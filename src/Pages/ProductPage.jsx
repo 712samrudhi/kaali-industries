@@ -2,35 +2,53 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Footer from "../../components/Footer";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useLanguage } from "../../context/LanguageContext";
 
+const texts = {
+  en: {
+    heading: "Our Products",
+    categoriesLabel: "Categories",
+    categoryList: ["All", "Fertilizer", "Seed", "Food", "Vegetable", "Fruit", "Grains"],
+    categoryLabel: "Category",
+    buyNow: "Buy Now",
+    details: "Details",
+    noProducts: "No Products Found",
+  },
+  mr: {
+    heading: "आमची उत्पादने",
+    categoriesLabel: "श्रेणी",
+    categoryList: ["सर्व", "खत", "बियाणे", "अन्न", "भाजी", "फळ", "धान्य"],
+    categoryLabel: "श्रेणी",
+    buyNow: "आता खरेदी करा",
+    details: "तपशील",
+    noProducts: "उत्पादने आढळली नाहीत",
+  },
+  hi: {
+    heading: "हमारे उत्पाद",
+    categoriesLabel: "श्रेणियां",
+    categoryList: ["सभी", "उर्वरक", "बीज", "भोजन", "सब्ज़ी", "फल", "अनाज"],
+    categoryLabel: "श्रेणी",
+    buyNow: "अभी खरीदें",
+    details: "विवरण",
+    noProducts: "कोई उत्पाद नहीं मिला",
+  },
+};
+
+// English category keys used for actual filtering logic (data stays in English on backend)
+const categoryKeys = ["All", "Fertilizer", "Seed", "Food", "Vegetable", "Fruit", "Grains"];
 
 function UserProductPage() {
-
 
 const [products,setProducts] = useState([]);
 const [filtered,setFiltered] = useState([]);
 const [category,setCategory] = useState("All");
 
-
 const navigate = useNavigate();
 const location = useLocation();
-
+const { lang } = useLanguage();
+const t = texts[lang];
 
 const isUser = location.pathname.startsWith("/user");
-
-
-
-const categories = [
- "All",
- "Fertilizer",
- "Seed",
- "Food",
- "Vegetable",
- "Fruit",
- "Grains"
-];
-
-
 
 useEffect(()=>{
 
@@ -46,9 +64,6 @@ setFiltered(res.data);
 
 
 },[]);
-
-
-
 
 
 const handleCategory=(cat)=>{
@@ -78,17 +93,11 @@ setFiltered(data);
 };
 
 
-
-
-
 const handleBuyNow=(product)=>{
 
 navigate("/checkout",{state:product});
 
 };
-
-
-
 
 
 return (
@@ -115,12 +124,9 @@ marginBottom:"35px"
 
 >
 
-Our Products
+{t.heading}
 
 </h1>
-
-
-
 
 
 <div
@@ -135,12 +141,7 @@ alignItems:"flex-start"
 
 >
 
-
-
-
-
 {/* CATEGORY SIDE */}
-
 
 <div
 
@@ -158,20 +159,19 @@ boxShadow:"0 3px 10px rgba(0,0,0,0.1)"
 
 
 <h3>
-Categories
+{t.categoriesLabel}
 </h3>
 
 
-
 {
-categories.map((cat)=>(
+categoryKeys.map((catKey, index)=>(
 
 
 <button
 
-key={cat}
+key={catKey}
 
-onClick={()=>handleCategory(cat)}
+onClick={()=>handleCategory(catKey)}
 
 
 style={{
@@ -185,14 +185,14 @@ cursor:"pointer",
 fontWeight:"bold",
 
 background:
-category===cat
+category===catKey
 ?
 "#2e7d32"
 :
 "#f1f1f1",
 
 color:
-category===cat
+category===catKey
 ?
 "white"
 :
@@ -202,7 +202,7 @@ category===cat
 
 >
 
-{cat}
+{t.categoryList[index]}
 
 </button>
 
@@ -215,10 +215,6 @@ category===cat
 
 
 </div>
-
-
-
-
 
 
 {/* PRODUCT SECTION */}
@@ -333,11 +329,6 @@ objectFit:"contain"
 </div>
 
 
-
-
-
-
-
 <div style={{padding:"15px"}}>
 
 
@@ -351,7 +342,7 @@ objectFit:"contain"
 
 <p style={{color:"#666"}}>
 
-Category : {item.category}
+{t.categoryLabel} : {item.category}
 
 </p>
 
@@ -363,7 +354,6 @@ Category : {item.category}
 ₹ {item.price}
 
 </h2>
-
 
 
 
@@ -400,14 +390,9 @@ fontWeight:"bold"
 
 >
 
-Buy Now
+{t.buyNow}
 
 </button>
-
-
-
-
-
 
 
 <button
@@ -443,7 +428,7 @@ fontWeight:"bold"
 
 >
 
-Details
+{t.details}
 
 </button>
 
@@ -469,7 +454,7 @@ Details
 
 
 <h2>
-No Products Found
+{t.noProducts}
 </h2>
 
 
