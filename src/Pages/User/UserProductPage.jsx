@@ -2,9 +2,49 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import BASE_URL from "../../config";
+import { useLanguage } from "../../context/LanguageContext";
 
 const FALLBACK_IMAGE =
   "data:image/svg+xml;charset=UTF-8,%3Csvg width='300' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23e0e0e0'/%3E%3Ctext x='50%25' y='50%25' font-size='18' fill='%23999' font-family='Arial' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+
+const texts = {
+  en: {
+    heading: "Our Products",
+    categoriesLabel: "Categories",
+    categoryList: ["All", "Fertilizer", "Biostimulant", "Seeds", "Pesticides", "Herbicide", "Fungicide", "PGR"],
+    categoryLabel: "Category",
+    loading: "Loading products...",
+    errorMsg: "Products load होत नाहीत. सर्व्हर तपासा किंवा नंतर प्रयत्न करा.",
+    buyNow: "Buy Now",
+    details: "Details",
+    noProducts: "No Products Found",
+  },
+  mr: {
+    heading: "आमची उत्पादने",
+    categoriesLabel: "श्रेणी",
+    categoryList: ["सर्व", "खत", "जैव-उत्तेजक", "बियाणे", "कीडनाशके", "तणनाशक", "बुरशीनाशक", "पीजीआर"],
+    categoryLabel: "श्रेणी",
+    loading: "उत्पादने लोड होत आहेत...",
+    errorMsg: "उत्पादने लोड होत नाहीत. सर्व्हर तपासा किंवा नंतर प्रयत्न करा.",
+    buyNow: "आता खरेदी करा",
+    details: "तपशील",
+    noProducts: "उत्पादने आढळली नाहीत",
+  },
+  hi: {
+    heading: "हमारे उत्पाद",
+    categoriesLabel: "श्रेणियां",
+    categoryList: ["सभी", "उर्वरक", "जैव-उत्तेजक", "बीज", "कीटनाशक", "खरपतवारनाशी", "फफूंदनाशी", "पीजीआर"],
+    categoryLabel: "श्रेणी",
+    loading: "उत्पाद लोड हो रहे हैं...",
+    errorMsg: "उत्पाद लोड नहीं हो रहे। सर्वर जांचें या बाद में प्रयास करें।",
+    buyNow: "अभी खरीदें",
+    details: "विवरण",
+    noProducts: "कोई उत्पाद नहीं मिला",
+  },
+};
+
+// English keys used for actual filtering logic — backend category values stay in English
+const categoryKeys = ["All", "Fertilizer", "Biostimulant", "Seeds", "Pesticides", "Herbicide", "Fungicide", "PGR"];
 
 function UserProductPage() {
   const [products, setProducts] = useState([]);
@@ -15,8 +55,8 @@ function UserProductPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const isUser = location.pathname.startsWith("/user");
-
-  const categories = ["All", "Fertilizer", "Biostimulant", "Seeds", "Pesticides", "Herbicide", "Fungicide", "PGR"];
+  const { lang } = useLanguage();
+  const t = texts[lang];
 
   useEffect(() => {
     setLoading(true);
@@ -76,10 +116,23 @@ function UserProductPage() {
     return `${BASE_URL}/uploads/${image}`;
   };
 
+  // Pick the right language field, falling back to base field if translation is empty
+  const getName = (item) => {
+    if (lang === "mr" && item.name_mr) return item.name_mr;
+    if (lang === "hi" && item.name_hi) return item.name_hi;
+    return item.name_en || item.name;
+  };
+
+  const getCategoryDisplay = (item) => {
+    if (lang === "mr" && item.category_mr) return item.category_mr;
+    if (lang === "hi" && item.category_hi) return item.category_hi;
+    return item.category_en || item.category;
+  };
+
   return (
     <div style={{ background: "#f5f5f5", minHeight: "100vh", padding: "30px" }}>
       <h1 style={{ textAlign: "center", color: "#2e7d32", marginBottom: "35px" }}>
-        Our Products
+        {t.heading}
       </h1>
       <div style={{ display: "flex", gap: "25px", alignItems: "flex-start" }}>
         <div
@@ -91,11 +144,11 @@ function UserProductPage() {
             boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
           }}
         >
-          <h3>Categories</h3>
-          {categories.map((cat) => (
+          <h3>{t.categoriesLabel}</h3>
+          {categoryKeys.map((catKey, index) => (
             <button
-              key={cat}
-              onClick={() => handleCategory(cat)}
+              key={catKey}
+              onClick={() => handleCategory(catKey)}
               style={{
                 width: "100%",
                 padding: "12px",
@@ -104,21 +157,21 @@ function UserProductPage() {
                 borderRadius: "8px",
                 cursor: "pointer",
                 fontWeight: "bold",
-                background: category === cat ? "#2e7d32" : "#f1f1f1",
-                color: category === cat ? "white" : "black",
+                background: category === catKey ? "#2e7d32" : "#f1f1f1",
+                color: category === catKey ? "white" : "black",
               }}
             >
-              {cat}
+              {t.categoryList[index]}
             </button>
           ))}
         </div>
 
         <div style={{ flex: 1 }}>
           {loading ? (
-            <h2>Loading products...</h2>
+            <h2>{t.loading}</h2>
           ) : error ? (
             <h2 style={{ color: "red" }}>
-              Products load होत नाहीत. सर्व्हर तपासा किंवा नंतर प्रयत्न करा.
+              {t.errorMsg}
             </h2>
           ) : (
             <div
@@ -159,8 +212,8 @@ function UserProductPage() {
                       />
                     </div>
                     <div style={{ padding: "15px" }}>
-                      <h3>{item.name}</h3>
-                      <p style={{ color: "#666" }}>Category : {item.category}</p>
+                      <h3>{getName(item)}</h3>
+                      <p style={{ color: "#666" }}>{t.categoryLabel} : {getCategoryDisplay(item)}</p>
                       <h2 style={{ color: "#B12704" }}>₹ {item.price}</h2>
                       <div style={{ display: "flex", gap: "10px" }}>
                         <button
@@ -176,7 +229,7 @@ function UserProductPage() {
                             fontWeight: "bold",
                           }}
                         >
-                          Buy Now
+                          {t.buyNow}
                         </button>
                         <button
                           onClick={() =>
@@ -195,14 +248,14 @@ function UserProductPage() {
                             fontWeight: "bold",
                           }}
                         >
-                          Details
+                          {t.details}
                         </button>
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <h2>No Products Found</h2>
+                <h2>{t.noProducts}</h2>
               )}
             </div>
           )}
