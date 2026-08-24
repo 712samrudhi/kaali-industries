@@ -6,10 +6,11 @@ import { useLanguage } from "../context/LanguageContext";
 
 const texts = {
   en: {
-    welcomeBack: "Welcome Back 👋",
-    createAccountTitle: "Create Account ✨",
+    eyebrow: "Borgave Industries",
+    welcomeBack: "Welcome Back",
+    createAccountTitle: "Create Account",
     loginSubtitle: "Login to continue shopping",
-    registerSubtitle: "Register to start journey",
+    registerSubtitle: "Register to start your journey",
     createAccountBtn: "Create Account",
     loginBtn: "Login",
     loginHeading: "Login",
@@ -25,8 +26,9 @@ const texts = {
     loginFail: "Login Failed",
   },
   mr: {
-    welcomeBack: "पुन्हा स्वागत आहे 👋",
-    createAccountTitle: "खाते तयार करा ✨",
+    eyebrow: "बोरगावे इंडस्ट्रीज",
+    welcomeBack: "पुन्हा स्वागत आहे",
+    createAccountTitle: "खाते तयार करा",
     loginSubtitle: "खरेदी सुरू ठेवण्यासाठी लॉगिन करा",
     registerSubtitle: "प्रवास सुरू करण्यासाठी नोंदणी करा",
     createAccountBtn: "खाते तयार करा",
@@ -44,8 +46,9 @@ const texts = {
     loginFail: "लॉगिन अयशस्वी",
   },
   hi: {
-    welcomeBack: "वापस स्वागत है 👋",
-    createAccountTitle: "खाता बनाएं ✨",
+    eyebrow: "बोरगावे इंडस्ट्रीज",
+    welcomeBack: "वापस स्वागत है",
+    createAccountTitle: "खाता बनाएं",
     loginSubtitle: "खरीदारी जारी रखने के लिए लॉगिन करें",
     registerSubtitle: "यात्रा शुरू करने के लिए रजिस्टर करें",
     createAccountBtn: "खाता बनाएं",
@@ -124,6 +127,8 @@ function LoginRegister() {
     <div className="auth-container">
       <div className="auth-box">
         <div className="auth-left">
+          <span className="auth-eyebrow">{t.eyebrow}</span>
+          <div className="auth-emoji">🌿</div>
           <h1>{isLogin ? t.welcomeBack : t.createAccountTitle}</h1>
           <p>{isLogin ? t.loginSubtitle : t.registerSubtitle}</p>
           <button onClick={() => setIsLogin(!isLogin)}>
@@ -152,17 +157,163 @@ function LoginRegister() {
           )}
         </div>
       </div>
+
       <style>{`
-        .auth-container { height:100vh; display:flex; justify-content:center; align-items:center; background:linear-gradient(135deg,#11998e,#38ef7d); font-family:Arial; }
-        .auth-box { width:850px; height:520px; display:flex; background:white; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px #0003; }
-        .auth-left { width:40%; background:linear-gradient(135deg,#11998e,#38ef7d); color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px; text-align:center; }
-        .auth-right { width:60%; padding:40px; display:flex; justify-content:center; flex-direction:column; }
-        form { display:flex; flex-direction:column; }
-        input { padding:12px; margin:8px 0; border-radius:8px; border:1px solid #ccc; }
-        button { padding:12px; margin-top:10px; border:none; border-radius:8px; background:#11998e; color:white; cursor:pointer; font-weight:bold; }
-        .auth-left button { background:white; color:#11998e; }
-        h2 { color:#11998e; }
-        @media(max-width:900px) { .auth-box { flex-direction:column; width:90%; height:auto; } .auth-left,.auth-right { width:100%; } }
+        .auth-container {
+          min-height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background: #F6F3EA;
+          font-family: 'Segoe UI', Arial, sans-serif;
+          padding: 30px 16px;
+        }
+
+        .auth-box {
+          width: 880px;
+          min-height: 540px;
+          display: flex;
+          background: #fff;
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 20px 50px rgba(23,63,46,0.18);
+          border: 1px solid #E7E2D3;
+        }
+
+        .auth-left {
+          position: relative;
+          width: 42%;
+          background: linear-gradient(160deg, #173F2E 0%, #0E2B20 100%);
+          color: #fff;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          padding: 40px 30px;
+          text-align: center;
+          overflow: hidden;
+        }
+
+        .auth-left::before {
+          content: "";
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 4px;
+          background: linear-gradient(90deg, #4C7A5D, #C9A24B);
+        }
+
+        .auth-eyebrow {
+          display: inline-block;
+          letter-spacing: 2.5px;
+          text-transform: uppercase;
+          font-size: 11.5px;
+          font-weight: 700;
+          color: #C9A24B;
+          border: 1px solid #C9A24B;
+          border-radius: 999px;
+          padding: 5px 14px;
+          margin-bottom: 18px;
+        }
+
+        .auth-emoji {
+          font-size: 44px;
+          margin-bottom: 6px;
+        }
+
+        .auth-left h1 {
+          font-size: 26px;
+          font-weight: 800;
+          margin: 6px 0 10px;
+        }
+
+        .auth-left p {
+          color: #C9D6CD;
+          font-size: 14.5px;
+          line-height: 1.5;
+          max-width: 260px;
+        }
+
+        .auth-left button {
+          margin-top: 26px;
+          padding: 12px 26px;
+          border: 2px solid #C9A24B;
+          border-radius: 999px;
+          background: transparent;
+          color: #C9A24B;
+          cursor: pointer;
+          font-weight: 700;
+          font-size: 14px;
+          letter-spacing: 0.3px;
+          transition: all 0.25s ease;
+        }
+
+        .auth-left button:hover {
+          background: #C9A24B;
+          color: #0E2B20;
+          transform: translateY(-2px);
+        }
+
+        .auth-right {
+          width: 58%;
+          padding: 48px 46px;
+          display: flex;
+          justify-content: center;
+          flex-direction: column;
+        }
+
+        .auth-right h2 {
+          color: #173F2E;
+          font-size: 24px;
+          font-weight: 800;
+          margin-bottom: 18px;
+        }
+
+        form {
+          display: flex;
+          flex-direction: column;
+        }
+
+        input {
+          padding: 13px 16px;
+          margin: 7px 0;
+          border-radius: 10px;
+          border: 1px solid #E0DBC9;
+          font-size: 14.5px;
+          outline: none;
+          transition: border-color 0.25s ease, box-shadow 0.25s ease;
+          font-family: inherit;
+        }
+
+        input:focus {
+          border-color: #C9A24B;
+          box-shadow: 0 0 0 3px rgba(201,162,75,0.18);
+        }
+
+        .auth-right button {
+          padding: 13px;
+          margin-top: 14px;
+          border: none;
+          border-radius: 10px;
+          background: #173F2E;
+          color: #fff;
+          cursor: pointer;
+          font-weight: 700;
+          font-size: 15px;
+          letter-spacing: 0.3px;
+          transition: all 0.25s ease;
+        }
+
+        .auth-right button:hover {
+          background: #C9A24B;
+          color: #0E2B20;
+          transform: translateY(-2px);
+        }
+
+        @media (max-width: 900px) {
+          .auth-box { flex-direction: column; width: 100%; max-width: 440px; height: auto; }
+          .auth-left, .auth-right { width: 100%; }
+          .auth-right { padding: 34px 30px; }
+        }
       `}</style>
     </div>
   );
