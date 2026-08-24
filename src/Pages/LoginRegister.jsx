@@ -6,11 +6,10 @@ import { useLanguage } from "../context/LanguageContext";
 
 const texts = {
   en: {
-    eyebrow: "Borgave Industries",
-    welcomeBack: "Welcome Back",
-    createAccountTitle: "Create Account",
+    welcomeBack: "Welcome Back 👋",
+    createAccountTitle: "Create Account ✨",
     loginSubtitle: "Login to continue shopping",
-    registerSubtitle: "Register to start your journey",
+    registerSubtitle: "Register to start journey",
     createAccountBtn: "Create Account",
     loginBtn: "Login",
     loginHeading: "Login",
@@ -26,9 +25,8 @@ const texts = {
     loginFail: "Login Failed",
   },
   mr: {
-    eyebrow: "बोरगावे इंडस्ट्रीज",
-    welcomeBack: "पुन्हा स्वागत आहे",
-    createAccountTitle: "खाते तयार करा",
+    welcomeBack: "पुन्हा स्वागत आहे 👋",
+    createAccountTitle: "खाते तयार करा ✨",
     loginSubtitle: "खरेदी सुरू ठेवण्यासाठी लॉगिन करा",
     registerSubtitle: "प्रवास सुरू करण्यासाठी नोंदणी करा",
     createAccountBtn: "खाते तयार करा",
@@ -46,9 +44,8 @@ const texts = {
     loginFail: "लॉगिन अयशस्वी",
   },
   hi: {
-    eyebrow: "बोरगावे इंडस्ट्रीज",
-    welcomeBack: "वापस स्वागत है",
-    createAccountTitle: "खाता बनाएं",
+    welcomeBack: "वापस स्वागत है 👋",
+    createAccountTitle: "खाता बनाएं ✨",
     loginSubtitle: "खरीदारी जारी रखने के लिए लॉगिन करें",
     registerSubtitle: "यात्रा शुरू करने के लिए रजिस्टर करें",
     createAccountBtn: "खाता बनाएं",
@@ -127,8 +124,6 @@ function LoginRegister() {
     <div className="auth-container">
       <div className="auth-box">
         <div className="auth-left">
-          <span className="auth-eyebrow">{t.eyebrow}</span>
-          <div className="auth-emoji">🌿</div>
           <h1>{isLogin ? t.welcomeBack : t.createAccountTitle}</h1>
           <p>{isLogin ? t.loginSubtitle : t.registerSubtitle}</p>
           <button onClick={() => setIsLogin(!isLogin)}>
@@ -157,199 +152,17 @@ function LoginRegister() {
           )}
         </div>
       </div>
-
       <style>{`
-        @keyframes authGlow {
-          0%, 100% { opacity: 0.5; }
-          50% { opacity: 1; }
-        }
-
-        .auth-container {
-          min-height: 100vh;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          background: #0B0B0D;
-          font-family: 'Segoe UI', Arial, sans-serif;
-          padding: 30px 16px;
-        }
-
-        .auth-box {
-          width: 880px;
-          min-height: 540px;
-          display: flex;
-          background: #141416;
-          border-radius: 20px;
-          overflow: hidden;
-          box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,183,77,0.08);
-          border: 1px solid #26262a;
-        }
-
-        .auth-left {
-          position: relative;
-          width: 42%;
-          background: radial-gradient(120% 120% at 20% 20%, #1F1B14 0%, #0B0B0D 70%);
-          color: #fff;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          padding: 40px 30px;
-          text-align: center;
-          overflow: hidden;
-        }
-
-        .auth-left::before {
-          content: "";
-          position: absolute;
-          top: 0; left: 0; right: 0;
-          height: 3px;
-          background: linear-gradient(90deg, transparent, #FFB74D, transparent);
-          animation: authGlow 2.4s ease-in-out infinite;
-        }
-
-        .auth-left::after {
-          content: "";
-          position: absolute;
-          width: 260px;
-          height: 260px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(255,183,77,0.18) 0%, transparent 70%);
-          bottom: -80px;
-          right: -80px;
-        }
-
-        .auth-eyebrow {
-          display: inline-block;
-          letter-spacing: 2.5px;
-          text-transform: uppercase;
-          font-size: 11.5px;
-          font-weight: 700;
-          color: #FFB74D;
-          border: 1px solid rgba(255,183,77,0.5);
-          border-radius: 999px;
-          padding: 5px 14px;
-          margin-bottom: 18px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .auth-emoji {
-          font-size: 44px;
-          margin-bottom: 6px;
-          position: relative;
-          z-index: 1;
-          filter: drop-shadow(0 0 14px rgba(255,183,77,0.5));
-        }
-
-        .auth-left h1 {
-          font-size: 27px;
-          font-weight: 800;
-          margin: 6px 0 10px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .auth-left p {
-          color: #9B9B9F;
-          font-size: 14.5px;
-          line-height: 1.5;
-          max-width: 260px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .auth-left button {
-          margin-top: 26px;
-          padding: 12px 26px;
-          border: 2px solid #FFB74D;
-          border-radius: 999px;
-          background: transparent;
-          color: #FFB74D;
-          cursor: pointer;
-          font-weight: 700;
-          font-size: 14px;
-          letter-spacing: 0.3px;
-          transition: all 0.25s ease;
-          position: relative;
-          z-index: 1;
-        }
-
-        .auth-left button:hover {
-          background: #FFB74D;
-          color: #0B0B0D;
-          transform: translateY(-2px);
-          box-shadow: 0 10px 24px rgba(255,183,77,0.35);
-        }
-
-        .auth-right {
-          width: 58%;
-          padding: 48px 46px;
-          display: flex;
-          justify-content: center;
-          flex-direction: column;
-          background: #141416;
-        }
-
-        .auth-right h2 {
-          color: #F2F2F0;
-          font-size: 24px;
-          font-weight: 800;
-          margin-bottom: 18px;
-        }
-
-        form {
-          display: flex;
-          flex-direction: column;
-        }
-
-        input {
-          padding: 13px 16px;
-          margin: 7px 0;
-          border-radius: 10px;
-          border: 1px solid #2C2C30;
-          background: #1B1B1E;
-          color: #F2F2F0;
-          font-size: 14.5px;
-          outline: none;
-          transition: border-color 0.25s ease, box-shadow 0.25s ease;
-          font-family: inherit;
-        }
-
-        input::placeholder {
-          color: #6E6E73;
-        }
-
-        input:focus {
-          border-color: #FFB74D;
-          box-shadow: 0 0 0 3px rgba(255,183,77,0.18);
-        }
-
-        .auth-right button {
-          padding: 13px;
-          margin-top: 14px;
-          border: none;
-          border-radius: 10px;
-          background: #FFB74D;
-          color: #0B0B0D;
-          cursor: pointer;
-          font-weight: 700;
-          font-size: 15px;
-          letter-spacing: 0.3px;
-          transition: all 0.25s ease;
-        }
-
-        .auth-right button:hover {
-          background: #ffc670;
-          transform: translateY(-2px);
-          box-shadow: 0 10px 24px rgba(255,183,77,0.3);
-        }
-
-        @media (max-width: 900px) {
-          .auth-box { flex-direction: column; width: 100%; max-width: 440px; height: auto; }
-          .auth-left, .auth-right { width: 100%; }
-          .auth-right { padding: 34px 30px; }
-        }
+        .auth-container { height:100vh; display:flex; justify-content:center; align-items:center; background:linear-gradient(135deg,#11998e,#38ef7d); font-family:Arial; }
+        .auth-box { width:850px; height:520px; display:flex; background:white; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px #0003; }
+        .auth-left { width:40%; background:linear-gradient(135deg,#11998e,#38ef7d); color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px; text-align:center; }
+        .auth-right { width:60%; padding:40px; display:flex; justify-content:center; flex-direction:column; }
+        form { display:flex; flex-direction:column; }
+        input { padding:12px; margin:8px 0; border-radius:8px; border:1px solid #ccc; }
+        button { padding:12px; margin-top:10px; border:none; border-radius:8px; background:#11998e; color:white; cursor:pointer; font-weight:bold; }
+        .auth-left button { background:white; color:#11998e; }
+        h2 { color:#11998e; }
+        @media(max-width:900px) { .auth-box { flex-direction:column; width:90%; height:auto; } .auth-left,.auth-right { width:100%; } }
       `}</style>
     </div>
   );
