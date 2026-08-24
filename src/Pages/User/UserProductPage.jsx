@@ -274,11 +274,12 @@ function UserProductPage() {
                           src={
                             item.image
                               ? `/uploads/${item.image}`
-                              : "https://via.placeholder.com/300"
+                              : "https://placehold.co/300x300?text=No+Image"
                           }
                           alt={item.name}
                           onError={(e) => {
-                            e.target.src = "https://via.placeholder.com/300";
+                            e.target.onerror = null;
+                            e.target.src = "https://placehold.co/300x300?text=No+Image";
                           }}
                           className="ki-card-image"
                           style={styles.image}
