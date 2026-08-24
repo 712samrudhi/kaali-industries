@@ -205,7 +205,9 @@ function UserProductPage() {
       <div style={styles.page} className="ki-shop-page">
         {/* HEADER */}
         <div style={styles.headerWrap}>
-          <div className="ki-shop-blob" aria-hidden="true" />
+          <div style={styles.headerTexture} aria-hidden="true" />
+          <div className="ki-shop-blob ki-shop-blob--gold" aria-hidden="true" />
+          <div className="ki-shop-blob ki-shop-blob--crop" aria-hidden="true" />
           <div style={styles.eyebrow}>
             <span style={{ width: 18, height: 1.5, background: C.soil, display: "inline-block" }} />
             <Icon.Sprout style={{ width: 14, height: 14 }} />
@@ -354,8 +356,13 @@ const globalCss = `
   .ki-buy-btn:hover { filter: brightness(1.06); box-shadow: 0 8px 18px rgba(223,164,59,0.4); }
   .ki-details-btn:hover { filter: brightness(1.15); box-shadow: 0 8px 18px rgba(27,67,50,0.3); }
   .ki-shop-blob {
-    position: absolute; top: -60px; right: 6%; width: 240px; height: 240px;
-    background: ${C.gold}; opacity: 0.22; border-radius: 50%; filter: blur(70px); pointer-events: none;
+    position: absolute; border-radius: 50%; filter: blur(75px); pointer-events: none;
+  }
+  .ki-shop-blob--gold {
+    top: -70px; right: 6%; width: 260px; height: 260px; background: ${C.gold}; opacity: 0.24;
+  }
+  .ki-shop-blob--crop {
+    top: -20px; left: 4%; width: 220px; height: 220px; background: ${C.crop}; opacity: 0.16;
   }
   .ki-skel {
     background: linear-gradient(90deg, ${C.paper} 25%, #ECE5D3 37%, ${C.paper} 63%);
@@ -380,7 +387,7 @@ const globalCss = `
 /* ---------- Styles ---------- */
 const styles = {
   page: {
-    background: C.parchment,
+    background: `linear-gradient(180deg, ${C.paper} 0%, ${C.parchment} 260px)`,
     minHeight: "100vh",
     fontFamily: FONT_BODY,
     color: C.ink,
@@ -390,6 +397,13 @@ const styles = {
     overflow: "hidden",
     textAlign: "center",
     padding: "56px 8% 30px",
+  },
+  headerTexture: {
+    position: "absolute",
+    inset: 0,
+    backgroundImage: `repeating-linear-gradient(120deg, ${C.paper} 0px, ${C.paper} 46px, transparent 46px, transparent 92px)`,
+    opacity: 0.5,
+    zIndex: 0,
   },
   eyebrow: {
     display: "inline-flex",
