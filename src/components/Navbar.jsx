@@ -80,67 +80,51 @@ function Navbar() {
         }
 
         .top-bar{
-          background:#0E2B20;
-          padding:9px 30px;
+          background:linear-gradient(90deg,#0f766e,#16a34a);
+          padding:10px 30px;
           display:flex;
           justify-content:space-between;
           align-items:center;
-          border-bottom: 1px solid rgba(201,162,75,0.25);
         }
 
         .contact-link{
-          color:#EFEAD9;
+          color:white;
           text-decoration:none;
-          font-size:14px;
+          font-size:16px;
           font-weight:600;
-          letter-spacing:0.5px;
-          transition: color 0.25s ease;
-        }
-
-        .contact-link:hover{
-          color:#C9A24B;
         }
 
         .lang-buttons{
           display:flex;
-          gap:8px;
+          gap:10px;
         }
 
         .lang-buttons button{
-          border:1px solid rgba(201,162,75,0.4);
-          background:transparent;
-          color:#C9D6CD;
-          padding:6px 14px;
+          border:none;
+          background:white;
+          color:#0f766e;
+          padding:8px 15px;
           border-radius:20px;
           cursor:pointer;
           font-weight:600;
-          font-size:13px;
-          transition: all 0.25s ease;
-        }
-
-        .lang-buttons button:hover{
-          border-color:#C9A24B;
-          color:#C9A24B;
         }
 
         .lang-buttons button.active{
-          background:#C9A24B;
-          color:#0E2B20;
-          border-color:#C9A24B;
+          background:#ff7a00;
+          color:white;
         }
 
         .navbar{
-          background:#F6F3EA;
-          min-height:88px;
+          background:white;
+          min-height:90px;
           padding:0 30px;
           display:flex;
           justify-content:space-between;
           align-items:center;
-          box-shadow:0 2px 14px rgba(23,63,46,0.08);
+          box-shadow:0 2px 10px rgba(0,0,0,0.08);
           position:sticky;
           top:0;
           z-index:1000;
-          border-bottom: 1px solid #E7E2D3;
         }
 
         .logo-section{
@@ -150,8 +134,8 @@ function Navbar() {
         }
 
         .logo{
-          width:210px;
-          height:66px;
+          width:220px;
+          height:70px;
           object-fit:contain;
           display:block;
         }
@@ -159,39 +143,21 @@ function Navbar() {
         .menu{
           display:flex;
           align-items:center;
-          gap:38px;
+          gap:35px;
           flex:1;
           justify-content:center;
         }
 
         .menu a{
-          position:relative;
           text-decoration:none;
-          color:#173F2E;
-          font-size:15px;
+          color:#333;
+          font-size:16px;
           font-weight:600;
-          letter-spacing:0.3px;
-          padding: 6px 2px;
-          transition:color 0.25s ease;
-        }
-
-        .menu a::after{
-          content:"";
-          position:absolute;
-          left:0;
-          bottom:0;
-          width:0%;
-          height:2px;
-          background:#C9A24B;
-          transition:width 0.25s ease;
+          transition:0.3s;
         }
 
         .menu a:hover{
-          color:#C9A24B;
-        }
-
-        .menu a:hover::after{
-          width:100%;
+          color:#16a34a;
         }
 
         .right-section{
@@ -203,78 +169,51 @@ function Navbar() {
         .search-box{
           display:flex;
           align-items:center;
-          border:2px solid #4C7A5D;
+          border:2px solid #16a34a;
           border-radius:30px;
           overflow:hidden;
-          background:#fff;
-          transition: border-color 0.25s ease;
-        }
-
-        .search-box:focus-within{
-          border-color:#C9A24B;
         }
 
         .search-box input{
           border:none;
           outline:none;
-          padding:9px 15px;
-          width:170px;
-          background:transparent;
-          font-size:14px;
+          padding:10px 15px;
+          width:180px;
         }
 
         .search-btn{
           border:none;
-          background:#173F2E;
-          color:#C9A24B;
+          background:#16a34a;
+          color:white;
           padding:10px 14px;
           cursor:pointer;
-          transition: background 0.25s ease;
-        }
-
-        .search-btn:hover{
-          background:#0E2B20;
         }
 
         .login-btn{
-          border:2px solid #173F2E;
-          background:transparent;
-          color:#173F2E;
-          padding:9px 20px;
+          border:none;
+          background:#ff7a00;
+          color:white;
+          padding:10px 18px;
           border-radius:25px;
           cursor:pointer;
-          font-weight:700;
-          font-size:14px;
-          transition: all 0.25s ease;
-        }
-
-        .login-btn:hover{
-          background:#173F2E;
-          color:#fff;
+          font-weight:bold;
         }
 
         .admin-btn{
           border:none;
-          background:#C9A24B;
-          color:#0E2B20;
-          padding:10px 20px;
+          background:#2563eb;
+          color:white;
+          padding:10px 18px;
           border-radius:25px;
           cursor:pointer;
-          font-weight:700;
-          font-size:14px;
-          transition: all 0.25s ease;
-        }
-
-        .admin-btn:hover{
-          background:#b8913f;
-          transform: translateY(-1px);
+          font-weight:bold;
         }
 
         .hamburger{
           display:none;
-          font-size:26px;
+          font-size:28px;
           cursor:pointer;
-          color:#173F2E;
+          color:#0f766e;
         }
 
         @media(max-width:768px){
@@ -286,15 +225,15 @@ function Navbar() {
 
           .menu{
             position:absolute;
-            top:88px;
+            top:90px;
             left:0;
             width:100%;
-            background:#F6F3EA;
+            background:white;
             flex-direction:column;
             gap:20px;
-            padding:24px 0;
+            padding:20px 0;
             display:none;
-            box-shadow:0 8px 20px rgba(23,63,46,0.12);
+            box-shadow:0 5px 10px rgba(0,0,0,0.1);
           }
 
           .menu.active{
@@ -310,8 +249,8 @@ function Navbar() {
           }
 
           .logo{
-            width:160px;
-            height:50px;
+            width:170px;
+            height:55px;
           }
 
           .navbar{
