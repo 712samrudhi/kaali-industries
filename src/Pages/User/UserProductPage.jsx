@@ -172,7 +172,7 @@ function UserProductPage() {
   useEffect(() => {
     setLoading(true);
     axios
-      .get("http://localhost:5000/api/products")
+      .get("/api/products")
       .then((res) => {
         setProducts(res.data);
         setFiltered(res.data);
@@ -273,7 +273,7 @@ function UserProductPage() {
                         <img
                           src={
                             item.image
-                              ? `http://localhost:5000/uploads/${item.image}`
+                              ? `/uploads/${item.image}`
                               : "https://via.placeholder.com/300"
                           }
                           alt={item.name}
