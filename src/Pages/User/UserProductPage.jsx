@@ -1,184 +1,142 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Footer from "../../components/Footer";
 import { useNavigate, useLocation } from "react-router-dom";
+import BASE_URL from "../../config";
 import { useLanguage } from "../../context/LanguageContext";
+
+const FALLBACK_IMAGE =
+  "data:image/svg+xml;charset=UTF-8,%3Csvg width='500' height='500' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f1'/%3E%3Ctext x='50%25' y='50%25' font-size='20' fill='%23999' font-family='Arial' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
 
 const texts = {
   en: {
-    badge: "Farm-Fresh Inputs",
     heading: "Our Products",
-    subheading: "Everything your fields need — sourced, tested, and ready to ship.",
-    categoriesLabel: "Categories",
-    categoryList: ["All", "Fertilizer", "Seed", "Food", "Vegetable", "Fruit", "Grains"],
+    subtitle:
+      "Innovative agricultural solutions for healthier crops and sustainable farming.",
+    categoriesLabel: "Product Categories",
+    categoryList: [
+      "All Products",
+      "Fertilizer",
+      "Biostimulant",
+      "Seeds",
+      "Pesticides",
+      "Herbicide",
+      "Fungicide",
+      "PGR",
+    ],
     categoryLabel: "Category",
+    loading: "Loading products...",
+    errorMsg: "Products could not be loaded. Please try again later.",
     buyNow: "Buy Now",
-    details: "Details",
+    details: "View Details",
     noProducts: "No Products Found",
-    noProductsSub: "Try a different category from the list.",
+    explore: "Explore Our Products",
+    quality: "Quality Agricultural Solutions",
+    qualityText:
+      "Trusted products designed to support farmers and improve crop productivity.",
   },
+
   mr: {
-    badge: "शेतासाठी ताजे इनपुट",
     heading: "आमची उत्पादने",
-    subheading: "तुमच्या शेतासाठी लागणारं सगळं — तपासलेलं आणि पाठवण्यास तयार.",
-    categoriesLabel: "श्रेणी",
-    categoryList: ["सर्व", "खत", "बियाणे", "अन्न", "भाजी", "फळ", "धान्य"],
+    subtitle:
+      "निरोगी पिके आणि शाश्वत शेतीसाठी आधुनिक कृषी उपाय.",
+    categoriesLabel: "उत्पादन श्रेणी",
+    categoryList: [
+      "सर्व उत्पादने",
+      "खत",
+      "जैव-उत्तेजक",
+      "बियाणे",
+      "कीडनाशके",
+      "तणनाशक",
+      "बुरशीनाशक",
+      "पीजीआर",
+    ],
     categoryLabel: "श्रेणी",
+    loading: "उत्पादने लोड होत आहेत...",
+    errorMsg:
+      "उत्पादने लोड होत नाहीत. कृपया नंतर पुन्हा प्रयत्न करा.",
     buyNow: "आता खरेदी करा",
-    details: "तपशील",
+    details: "तपशील पहा",
     noProducts: "उत्पादने आढळली नाहीत",
-    noProductsSub: "यादीतील दुसरी श्रेणी निवडून पहा.",
+    explore: "आमची उत्पादने",
+    quality: "उत्तम कृषी उपाय",
+    qualityText:
+      "शेतकऱ्यांसाठी विश्वासार्ह उत्पादने जी पिकांची गुणवत्ता आणि उत्पादनक्षमता वाढवण्यास मदत करतात.",
   },
+
   hi: {
-    badge: "खेत के लिए ताज़ा इनपुट",
     heading: "हमारे उत्पाद",
-    subheading: "आपके खेत के लिए ज़रूरी सब कुछ — जांचा-परखा और भेजने के लिए तैयार.",
-    categoriesLabel: "श्रेणियां",
-    categoryList: ["सभी", "उर्वरक", "बीज", "भोजन", "सब्ज़ी", "फल", "अनाज"],
+    subtitle:
+      "स्वस्थ फसलों और टिकाऊ खेती के लिए आधुनिक कृषि समाधान।",
+    categoriesLabel: "उत्पाद श्रेणियां",
+    categoryList: [
+      "सभी उत्पाद",
+      "उर्वरक",
+      "जैव-उत्तेजक",
+      "बीज",
+      "कीटनाशक",
+      "खरपतवारनाशी",
+      "फफूंदनाशी",
+      "पीजीआर",
+    ],
     categoryLabel: "श्रेणी",
+    loading: "उत्पाद लोड हो रहे हैं...",
+    errorMsg:
+      "उत्पाद लोड नहीं हो रहे हैं। कृपया बाद में पुनः प्रयास करें।",
     buyNow: "अभी खरीदें",
-    details: "विवरण",
+    details: "विवरण देखें",
     noProducts: "कोई उत्पाद नहीं मिला",
-    noProductsSub: "सूची में से कोई और श्रेणी आज़माएं.",
+    explore: "हमारे उत्पाद",
+    quality: "गुणवत्तापूर्ण कृषि समाधान",
+    qualityText:
+      "किसानों के लिए विश्वसनीय उत्पाद जो फसल की गुणवत्ता और उत्पादकता बढ़ाने में मदद करते हैं।",
   },
 };
 
-// English category keys used for actual filtering logic (data stays in English on backend)
-const categoryKeys = ["All", "Fertilizer", "Seed", "Food", "Vegetable", "Fruit", "Grains"];
-
-/* ---------- Color / type tokens (shared visual language with About page) ---------- */
-const C = {
-  forest: "#1B4332",
-  forestDark: "#0F2C21",
-  crop: "#40916C",
-  soil: "#7A4A1F",
-  gold: "#DFA43B",
-  parchment: "#FBF7EF",
-  paper: "#F3EEE1",
-  ink: "#26261F",
-  inkSoft: "#5C594D",
-  line: "#E4DCC8",
-  danger: "#B12704",
-};
-const FONT_DISPLAY = "'Fraunces', Georgia, 'Times New Roman', serif";
-const FONT_BODY = "'Inter', -apple-system, 'Segoe UI', sans-serif";
-
-/* ---------- Inline icons (no external deps) ---------- */
-const Icon = {
-  Grid: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
-    </svg>
-  ),
-  Sprout: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="M12 21v-8" /><path d="M12 13c0-4 3-6 7-6 0 4-3 6-7 6Z" />
-      <path d="M12 13c0-3.2-2.4-5.2-6-5.2C6 11.6 8.4 13 12 13Z" />
-    </svg>
-  ),
-  Grain: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="M12 3c2 2 2 4 0 6-2-2-2-4 0-6Z" /><path d="M12 9c2.5 2 2.5 4.5 0 7-2.5-2.5-2.5-5 0-7Z" />
-      <path d="M12 16c2.5 2 2.5 3.5 0 5-2.5-1.5-2.5-3 0-5Z" />
-    </svg>
-  ),
-  Basket: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="M4 10h16l-1.5 9a2 2 0 0 1-2 1.7H7.5a2 2 0 0 1-2-1.7L4 10Z" />
-      <path d="M8 10 10 4M16 10 14 4M2 10h20" />
-    </svg>
-  ),
-  Leaf: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="M4 20c8-1 12-6 13-15-9 1-13 6-13 15Z" /><path d="M6 18C10 13 13 9 17 5" />
-    </svg>
-  ),
-  Apple: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="M12 8c-4 0-6.5 2.7-6.5 6.5S9 21 12 21s6.5-2.7 6.5-6.5S16 8 12 8Z" />
-      <path d="M12 8c0-2 1-3.5 3-4" />
-    </svg>
-  ),
-  Cart: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <circle cx="9" cy="20" r="1.4" /><circle cx="17" cy="20" r="1.4" />
-      <path d="M2 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L21 7H6" />
-    </svg>
-  ),
-  Info: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7.5v.01" />
-    </svg>
-  ),
-  Empty: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="M3 9l2-5h14l2 5M3 9v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9M3 9h18" />
-      <path d="M9 13h6" />
-    </svg>
-  ),
-};
-
-const categoryIcons = [Icon.Grid, Icon.Sprout, Icon.Grain, Icon.Basket, Icon.Leaf, Icon.Apple, Icon.Grain];
-
-function Furrow({ tone = C.line }) {
-  return (
-    <svg viewBox="0 0 1200 40" preserveAspectRatio="none" style={{ width: "100%", height: 22, display: "block" }} aria-hidden="true">
-      <path
-        d="M0 20 Q 50 4 100 20 T 200 20 T 300 20 T 400 20 T 500 20 T 600 20 T 700 20 T 800 20 T 900 20 T 1000 20 T 1100 20 T 1200 20"
-        fill="none" stroke={tone} strokeWidth="1.5"
-      />
-    </svg>
-  );
-}
-
-function SkeletonCard() {
-  return (
-    <div style={styles.card}>
-      <div className="ki-skel" style={{ height: 220, borderRadius: 10 }} />
-      <div style={{ padding: 16 }}>
-        <div className="ki-skel" style={{ height: 16, width: "70%", borderRadius: 6, marginBottom: 10 }} />
-        <div className="ki-skel" style={{ height: 12, width: "45%", borderRadius: 6, marginBottom: 14 }} />
-        <div className="ki-skel" style={{ height: 20, width: "35%", borderRadius: 6 }} />
-      </div>
-    </div>
-  );
-}
+const categoryKeys = [
+  "All",
+  "Fertilizer",
+  "Biostimulant",
+  "Seeds",
+  "Pesticides",
+  "Herbicide",
+  "Fungicide",
+  "PGR",
+];
 
 function UserProductPage() {
   const [products, setProducts] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [category, setCategory] = useState("All");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { lang } = useLanguage();
-  const t = texts[lang];
 
   const isUser = location.pathname.startsWith("/user");
 
-  useEffect(() => {
-    if (!document.getElementById("ki-shop-fonts")) {
-      const link = document.createElement("link");
-      link.id = "ki-shop-fonts";
-      link.rel = "stylesheet";
-      link.href =
-        "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap";
-      document.head.appendChild(link);
-    }
-  }, []);
+  const { lang } = useLanguage();
+  const t = texts[lang] || texts.en;
 
   useEffect(() => {
     setLoading(true);
+
     axios
-      .get("/api/products")
+      .get(`${BASE_URL}/api/products`)
       .then((res) => {
-        setProducts(res.data);
-        setFiltered(res.data);
+        const data = res.data || [];
+
+        setProducts(data);
+        setFiltered(data);
+        setError(false);
       })
-      .catch((err) => console.log(err))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        console.log(err);
+        setError(true);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const handleCategory = (cat) => {
@@ -186,408 +144,696 @@ function UserProductPage() {
 
     if (cat === "All") {
       setFiltered(products);
-    } else {
-      const data = products.filter(
-        (item) => item.category && item.category.toLowerCase() === cat.toLowerCase()
-      );
-      setFiltered(data);
+      return;
     }
+
+    const data = products.filter(
+      (item) =>
+        item.category &&
+        item.category.toLowerCase() === cat.toLowerCase()
+    );
+
+    setFiltered(data);
   };
 
   const handleBuyNow = (product) => {
-    navigate("/checkout", { state: product });
+    const farmer = localStorage.getItem("farmer");
+
+    if (!farmer || farmer === "null") {
+      navigate("/login");
+      return;
+    }
+
+    localStorage.setItem(
+      "checkoutProduct",
+      JSON.stringify({
+        items: [
+          {
+            id: product.id,
+            name: product.name,
+            price: Number(product.price),
+            ml: "",
+            image: product.image,
+            qty: 1,
+          },
+        ],
+        totalItems: 1,
+        totalPrice: Number(product.price),
+      })
+    );
+
+    navigate("/checkout");
+  };
+
+  const getImageSrc = (image) => {
+    if (!image) return FALLBACK_IMAGE;
+
+    if (image.startsWith("http")) {
+      return image;
+    }
+
+    return `${BASE_URL}/uploads/${image}`;
+  };
+
+  const getName = (item) => {
+    if (lang === "mr" && item.name_mr) {
+      return item.name_mr;
+    }
+
+    if (lang === "hi" && item.name_hi) {
+      return item.name_hi;
+    }
+
+    return item.name_en || item.name;
+  };
+
+  const getCategoryDisplay = (item) => {
+    if (lang === "mr" && item.category_mr) {
+      return item.category_mr;
+    }
+
+    if (lang === "hi" && item.category_hi) {
+      return item.category_hi;
+    }
+
+    return item.category_en || item.category;
   };
 
   return (
     <>
-      <style>{globalCss}</style>
+      <style>{`
 
-      <div style={styles.page} className="ki-shop-page">
-        {/* HEADER */}
-        <div style={styles.headerWrap}>
-          <div style={styles.headerTexture} aria-hidden="true" />
-          <div className="ki-shop-blob ki-shop-blob--gold" aria-hidden="true" />
-          <div className="ki-shop-blob ki-shop-blob--crop" aria-hidden="true" />
-          <div style={styles.eyebrow}>
-            <span style={{ width: 18, height: 1.5, background: C.soil, display: "inline-block" }} />
-            <Icon.Sprout style={{ width: 14, height: 14 }} />
-            <span>{t.badge}</span>
+        * {
+          box-sizing: border-box;
+        }
+
+        .products-page {
+          min-height: 100vh;
+          background: #f7faf6;
+          color: #1c2b20;
+          font-family: Arial, Helvetica, sans-serif;
+        }
+
+        /* HERO */
+
+        .products-hero {
+          position: relative;
+          background:
+            linear-gradient(
+              135deg,
+              rgba(22, 74, 38, 0.97),
+              rgba(52, 112, 54, 0.92)
+            );
+          padding: 75px 30px 80px;
+          overflow: hidden;
+        }
+
+        .products-hero::before {
+          content: "";
+          position: absolute;
+          width: 400px;
+          height: 400px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.06);
+          right: -100px;
+          top: -180px;
+        }
+
+        .products-hero::after {
+          content: "";
+          position: absolute;
+          width: 250px;
+          height: 250px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.05);
+          left: -100px;
+          bottom: -150px;
+        }
+
+        .hero-content {
+          position: relative;
+          z-index: 2;
+          max-width: 1150px;
+          margin: auto;
+          text-align: center;
+          color: white;
+        }
+
+        .hero-small {
+          display: inline-block;
+          padding: 8px 18px;
+          border: 1px solid rgba(255,255,255,0.35);
+          border-radius: 30px;
+          font-size: 13px;
+          letter-spacing: 1px;
+          margin-bottom: 20px;
+          text-transform: uppercase;
+        }
+
+        .hero-title {
+          margin: 0;
+          font-size: 48px;
+          font-weight: 700;
+          letter-spacing: -1px;
+        }
+
+        .hero-subtitle {
+          max-width: 700px;
+          margin: 20px auto 0;
+          font-size: 17px;
+          line-height: 1.7;
+          color: #e6f1e7;
+        }
+
+        /* MAIN */
+
+        .products-container {
+          max-width: 1250px;
+          margin: auto;
+          padding: 55px 25px 80px;
+        }
+
+        .section-heading {
+          text-align: center;
+          margin-bottom: 40px;
+        }
+
+        .section-heading h2 {
+          font-size: 32px;
+          margin: 0 0 12px;
+          color: #245c2c;
+        }
+
+        .section-heading p {
+          color: #68746a;
+          margin: 0;
+        }
+
+        .products-layout {
+          display: grid;
+          grid-template-columns: 230px 1fr;
+          gap: 35px;
+          align-items: start;
+        }
+
+        /* CATEGORY */
+
+        .category-box {
+          background: white;
+          padding: 22px;
+          border-radius: 16px;
+          border: 1px solid #e3ebe3;
+          box-shadow: 0 8px 30px rgba(33, 76, 40, 0.07);
+          position: sticky;
+          top: 20px;
+        }
+
+        .category-title {
+          margin: 0 0 15px;
+          color: #245c2c;
+          font-size: 18px;
+        }
+
+        .category-button {
+          width: 100%;
+          border: none;
+          background: transparent;
+          text-align: left;
+          padding: 12px 14px;
+          margin-bottom: 5px;
+          border-radius: 8px;
+          cursor: pointer;
+          color: #536158;
+          font-size: 14px;
+          transition: all 0.2s ease;
+        }
+
+        .category-button:hover {
+          background: #eef7ed;
+          color: #2e7d32;
+        }
+
+        .category-button.active {
+          background: #2e7d32;
+          color: white;
+          font-weight: 600;
+          box-shadow: 0 5px 15px rgba(46,125,50,0.2);
+        }
+
+        /* PRODUCT GRID */
+
+        .products-grid {
+          display: grid;
+          grid-template-columns: repeat(
+            auto-fill,
+            minmax(250px, 1fr)
+          );
+          gap: 25px;
+        }
+
+        .product-card {
+          background: white;
+          border-radius: 16px;
+          overflow: hidden;
+          border: 1px solid #e5ebe5;
+          transition: all 0.3s ease;
+          box-shadow: 0 7px 25px rgba(32, 69, 38, 0.06);
+        }
+
+        .product-card:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 15px 35px rgba(32, 69, 38, 0.13);
+        }
+
+        .product-image-wrapper {
+          height: 250px;
+          background: #f8faf7;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          border-bottom: 1px solid #edf1ed;
+          position: relative;
+        }
+
+        .product-image {
+          width: 100%;
+          height: 215px;
+          object-fit: contain;
+          transition: transform 0.3s ease;
+        }
+
+        .product-card:hover .product-image {
+          transform: scale(1.05);
+        }
+
+        .product-content {
+          padding: 20px;
+        }
+
+        .product-category {
+          display: inline-block;
+          background: #edf7ec;
+          color: #317038;
+          padding: 5px 10px;
+          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 600;
+          margin-bottom: 10px;
+        }
+
+        .product-name {
+          font-size: 19px;
+          line-height: 1.35;
+          margin: 0 0 10px;
+          color: #26372b;
+          min-height: 50px;
+        }
+
+        .product-price {
+          font-size: 22px;
+          font-weight: 700;
+          color: #b12704;
+          margin: 12px 0 18px;
+        }
+
+        .product-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 9px;
+        }
+
+        .buy-button,
+        .details-button {
+          border: none;
+          padding: 11px 8px;
+          border-radius: 7px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 13px;
+          transition: all 0.2s ease;
+        }
+
+        .buy-button {
+          background: #f4a261;
+          color: white;
+        }
+
+        .buy-button:hover {
+          background: #e8893e;
+        }
+
+        .details-button {
+          background: #245c2c;
+          color: white;
+        }
+
+        .details-button:hover {
+          background: #17461f;
+        }
+
+        /* LOADING */
+
+        .loading-box {
+          background: white;
+          border-radius: 15px;
+          padding: 60px 20px;
+          text-align: center;
+          color: #47704c;
+        }
+
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #dceadc;
+          border-top: 4px solid #2e7d32;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+          margin: 0 auto 18px;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        /* ERROR */
+
+        .error-box {
+          background: #fff4f2;
+          border: 1px solid #ffd5ce;
+          color: #c0392b;
+          padding: 25px;
+          border-radius: 12px;
+          text-align: center;
+        }
+
+        /* EMPTY */
+
+        .empty-box {
+          background: white;
+          border-radius: 15px;
+          padding: 70px 20px;
+          text-align: center;
+          color: #718074;
+        }
+
+        .empty-icon {
+          font-size: 45px;
+          margin-bottom: 10px;
+        }
+
+        /* BOTTOM INFO */
+
+        .quality-section {
+          margin-top: 65px;
+          background: linear-gradient(
+            135deg,
+            #edf7ec,
+            #f8fbf7
+          );
+          border: 1px solid #dfeadf;
+          border-radius: 18px;
+          padding: 40px;
+          text-align: center;
+        }
+
+        .quality-section h2 {
+          color: #245c2c;
+          margin: 0 0 12px;
+          font-size: 28px;
+        }
+
+        .quality-section p {
+          max-width: 700px;
+          margin: auto;
+          color: #627066;
+          line-height: 1.7;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 850px) {
+
+          .products-layout {
+            grid-template-columns: 1fr;
+          }
+
+          .category-box {
+            position: static;
+          }
+
+          .category-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 5px;
+          }
+
+          .category-button {
+            margin: 0;
+          }
+
+          .hero-title {
+            font-size: 38px;
+          }
+        }
+
+        @media (max-width: 550px) {
+
+          .products-hero {
+            padding: 55px 20px 60px;
+          }
+
+          .hero-title {
+            font-size: 32px;
+          }
+
+          .hero-subtitle {
+            font-size: 15px;
+          }
+
+          .products-container {
+            padding: 40px 15px 60px;
+          }
+
+          .section-heading h2 {
+            font-size: 26px;
+          }
+
+          .products-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .category-buttons {
+            grid-template-columns: 1fr;
+          }
+
+          .product-image-wrapper {
+            height: 270px;
+          }
+
+          .product-image {
+            height: 235px;
+          }
+
+          .quality-section {
+            padding: 30px 20px;
+          }
+        }
+
+      `}</style>
+
+      <div className="products-page">
+
+        {/* HERO */}
+        <section className="products-hero">
+          <div className="hero-content">
+
+            <span className="hero-small">
+              Agricultural Solutions
+            </span>
+
+            <h1 className="hero-title">
+              {t.heading}
+            </h1>
+
+            <p className="hero-subtitle">
+              {t.subtitle}
+            </p>
+
           </div>
-          <h1 style={styles.heading}>{t.heading}</h1>
-          <p style={styles.subheading}>{t.subheading}</p>
-        </div>
+        </section>
 
-        <Furrow />
+        {/* MAIN */}
+        <main className="products-container">
 
-        <div style={styles.body}>
-          <div style={styles.layout} className="ki-shop-layout">
-            {/* CATEGORY SIDE */}
-            <div style={styles.sidebar} className="ki-sidebar">
-              <h3 style={styles.sidebarHeading}>{t.categoriesLabel}</h3>
+          <div className="section-heading">
+            <h2>{t.explore}</h2>
+            <p>{t.qualityText}</p>
+          </div>
 
-              <div style={styles.categoryList} className="ki-category-list">
-                {categoryKeys.map((catKey, index) => {
-                  const CatIcon = categoryIcons[index % categoryIcons.length];
-                  const active = category === catKey;
-                  return (
-                    <button
-                      key={catKey}
-                      onClick={() => handleCategory(catKey)}
-                      className="ki-cat-btn"
-                      style={{
-                        ...styles.catButton,
-                        background: active ? C.forest : "#FFFFFF",
-                        color: active ? "#FFFFFF" : C.ink,
-                        borderColor: active ? C.forest : C.line,
-                      }}
-                    >
-                      <span
-                        style={{
-                          ...styles.catIconWrap,
-                          background: active ? "rgba(255,255,255,0.14)" : C.paper,
-                          color: active ? C.gold : C.forest,
-                        }}
-                      >
-                        <CatIcon style={{ width: 16, height: 16 }} />
-                      </span>
-                      {t.categoryList[index]}
-                    </button>
-                  );
-                })}
+          <div className="products-layout">
+
+            {/* CATEGORY */}
+            <aside className="category-box">
+
+              <h3 className="category-title">
+                {t.categoriesLabel}
+              </h3>
+
+              <div className="category-buttons">
+
+                {categoryKeys.map((catKey, index) => (
+                  <button
+                    key={catKey}
+                    onClick={() => handleCategory(catKey)}
+                    className={`category-button ${
+                      category === catKey ? "active" : ""
+                    }`}
+                  >
+                    {t.categoryList[index]}
+                  </button>
+                ))}
+
               </div>
-            </div>
 
-            {/* PRODUCT SECTION */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={styles.grid}>
-                {loading ? (
-                  Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-                ) : filtered.length > 0 ? (
-                  filtered.map((item, idx) => (
-                    <div
-                      key={item.id}
-                      className="ki-card"
-                      style={{ ...styles.card, animationDelay: `${idx * 60}ms` }}
-                    >
-                      <div style={styles.imageBox}>
-                        <img
-                          src={
-                            item.image
-                              ? `/uploads/${item.image}`
-                              : "https://placehold.co/300x300?text=No+Image"
-                          }
-                          alt={item.name}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = "https://placehold.co/300x300?text=No+Image";
-                          }}
-                          className="ki-card-image"
-                          style={styles.image}
-                        />
-                      </div>
+            </aside>
 
-                      <div style={{ padding: "16px 18px 18px" }}>
-                        <h3 style={styles.productName}>{item.name}</h3>
+            {/* PRODUCTS */}
+            <section>
 
-                        <p style={styles.categoryTag}>
-                          {t.categoryLabel} : {item.category}
-                        </p>
+              {loading && (
+                <div className="loading-box">
 
-                        <h2 style={styles.price}>₹ {item.price}</h2>
+                  <div className="spinner"></div>
 
-                        <div style={{ display: "flex", gap: 10 }}>
-                          <button onClick={() => handleBuyNow(item)} className="ki-buy-btn" style={styles.buyBtn}>
-                            <Icon.Cart style={{ width: 15, height: 15 }} />
-                            {t.buyNow}
-                          </button>
+                  <strong>{t.loading}</strong>
 
-                          <button
-                            onClick={() =>
-                              isUser
-                                ? navigate(`/user/product/${item.id}`)
-                                : navigate(`/product/${item.id}`)
-                            }
-                            className="ki-details-btn"
-                            style={styles.detailsBtn}
-                          >
-                            <Icon.Info style={{ width: 15, height: 15 }} />
-                            {t.details}
-                          </button>
-                        </div>
-                      </div>
+                </div>
+              )}
+
+              {error && !loading && (
+                <div className="error-box">
+                  <strong>{t.errorMsg}</strong>
+                </div>
+              )}
+
+              {!loading && !error && (
+                <>
+                  {filtered.length > 0 ? (
+
+                    <div className="products-grid">
+
+                      {filtered.map((item) => (
+
+                        <article
+                          className="product-card"
+                          key={item.id}
+                        >
+
+                          {/* IMAGE */}
+                          <div className="product-image-wrapper">
+
+                            <img
+                              className="product-image"
+                              src={getImageSrc(item.image)}
+                              alt={getName(item)}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = FALLBACK_IMAGE;
+                              }}
+                            />
+
+                          </div>
+
+                          {/* CONTENT */}
+                          <div className="product-content">
+
+                            <span className="product-category">
+                              {getCategoryDisplay(item)}
+                            </span>
+
+                            <h3 className="product-name">
+                              {getName(item)}
+                            </h3>
+
+                            <div className="product-price">
+                              ₹ {item.price}
+                            </div>
+
+                            <div className="product-actions">
+
+                              <button
+                                className="buy-button"
+                                onClick={() =>
+                                  handleBuyNow(item)
+                                }
+                              >
+                                {t.buyNow}
+                              </button>
+
+                              <button
+                                className="details-button"
+                                onClick={() =>
+                                  isUser
+                                    ? navigate(
+                                        `/user/product/${item.id}`
+                                      )
+                                    : navigate(
+                                        `/product/${item.id}`
+                                      )
+                                }
+                              >
+                                {t.details}
+                              </button>
+
+                            </div>
+
+                          </div>
+
+                        </article>
+
+                      ))}
+
                     </div>
-                  ))
-                ) : (
-                  <div style={styles.emptyState}>
-                    <Icon.Empty style={{ width: 46, height: 46, color: C.soil, opacity: 0.6 }} />
-                    <h2 style={styles.emptyHeading}>{t.noProducts}</h2>
-                    <p style={styles.emptySub}>{t.noProductsSub}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <Footer />
+                  ) : (
+
+                    <div className="empty-box">
+
+                      <div className="empty-icon">
+                        🌱
+                      </div>
+
+                      <h3>{t.noProducts}</h3>
+
+                    </div>
+
+                  )}
+                </>
+              )}
+
+            </section>
+
+          </div>
+
+          {/* BOTTOM SECTION */}
+          <section className="quality-section">
+
+            <h2>{t.quality}</h2>
+
+            <p>
+              {t.qualityText}
+            </p>
+
+          </section>
+
+        </main>
+
+      </div>
     </>
   );
 }
-
-/* ---------- Global CSS ---------- */
-const globalCss = `
-  @keyframes kiCardIn {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .ki-card {
-    animation: kiCardIn 0.5s ease both;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-  }
-  .ki-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 16px 30px rgba(27,67,50,0.16);
-  }
-  .ki-card-image { transition: transform 0.4s ease; }
-  .ki-card:hover .ki-card-image { transform: scale(1.05); }
-  .ki-cat-btn { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
-  .ki-cat-btn:hover { transform: translateX(3px); border-color: ${C.crop} !important; }
-  .ki-buy-btn, .ki-details-btn { transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease; }
-  .ki-buy-btn:hover { filter: brightness(1.06); box-shadow: 0 8px 18px rgba(223,164,59,0.4); }
-  .ki-details-btn:hover { filter: brightness(1.15); box-shadow: 0 8px 18px rgba(27,67,50,0.3); }
-  .ki-shop-blob {
-    position: absolute; border-radius: 50%; filter: blur(75px); pointer-events: none;
-  }
-  .ki-shop-blob--gold {
-    top: -70px; right: 6%; width: 260px; height: 260px; background: ${C.gold}; opacity: 0.24;
-  }
-  .ki-shop-blob--crop {
-    top: -20px; left: 4%; width: 220px; height: 220px; background: ${C.crop}; opacity: 0.16;
-  }
-  .ki-skel {
-    background: linear-gradient(90deg, ${C.paper} 25%, #ECE5D3 37%, ${C.paper} 63%);
-    background-size: 400% 100%;
-    animation: kiShimmer 1.4s ease infinite;
-  }
-  @keyframes kiShimmer {
-    0% { background-position: 100% 50%; }
-    100% { background-position: 0 50%; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .ki-card, .ki-card-image, .ki-cat-btn, .ki-buy-btn, .ki-details-btn, .ki-skel { animation: none !important; transition: none !important; }
-  }
-  @media (max-width: 760px) {
-    .ki-shop-layout { flex-direction: column !important; }
-    .ki-sidebar { width: 100% !important; }
-    .ki-category-list { flex-direction: row !important; flex-wrap: wrap; }
-    .ki-cat-btn { width: auto !important; flex: 1 1 auto; justify-content: center !important; }
-  }
-`;
-
-/* ---------- Styles ---------- */
-const styles = {
-  page: {
-    background: `linear-gradient(180deg, ${C.paper} 0%, ${C.parchment} 260px)`,
-    minHeight: "100vh",
-    fontFamily: FONT_BODY,
-    color: C.ink,
-  },
-  headerWrap: {
-    position: "relative",
-    overflow: "hidden",
-    textAlign: "center",
-    padding: "56px 8% 30px",
-  },
-  headerTexture: {
-    position: "absolute",
-    inset: 0,
-    backgroundImage: `repeating-linear-gradient(120deg, ${C.paper} 0px, ${C.paper} 46px, transparent 46px, transparent 92px)`,
-    opacity: 0.5,
-    zIndex: 0,
-  },
-  eyebrow: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-    fontSize: 12.5,
-    fontWeight: 700,
-    letterSpacing: "0.14em",
-    textTransform: "uppercase",
-    color: C.soil,
-    marginBottom: 12,
-    position: "relative",
-    zIndex: 1,
-  },
-  heading: {
-    fontFamily: FONT_DISPLAY,
-    fontWeight: 600,
-    fontSize: "clamp(32px, 4.6vw, 46px)",
-    color: C.forest,
-    margin: "0 0 10px",
-    position: "relative",
-    zIndex: 1,
-  },
-  subheading: {
-    fontSize: 16,
-    color: C.inkSoft,
-    maxWidth: 520,
-    margin: "0 auto",
-    position: "relative",
-    zIndex: 1,
-  },
-  body: {
-    padding: "34px 8% 70px",
-  },
-  layout: {
-    display: "flex",
-    gap: 26,
-    alignItems: "flex-start",
-    maxWidth: 1300,
-    margin: "0 auto",
-  },
-  sidebar: {
-    width: 250,
-    flexShrink: 0,
-    background: "#FFFFFF",
-    padding: 20,
-    borderRadius: 16,
-    border: `1px solid ${C.line}`,
-    boxShadow: "0 6px 18px rgba(27,67,50,0.06)",
-    position: "sticky",
-    top: 16,
-  },
-  sidebarHeading: {
-    fontFamily: FONT_DISPLAY,
-    fontWeight: 600,
-    fontSize: 18,
-    color: C.forest,
-    margin: "0 0 14px",
-  },
-  categoryList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 10,
-  },
-  catButton: {
-    width: "100%",
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    padding: "10px 12px",
-    border: "1px solid",
-    borderRadius: 10,
-    cursor: "pointer",
-    fontWeight: 600,
-    fontSize: 14,
-    fontFamily: FONT_BODY,
-    textAlign: "left",
-  },
-  catIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))",
-    gap: 22,
-  },
-  card: {
-    background: "#FFFFFF",
-    borderRadius: 16,
-    overflow: "hidden",
-    border: `1px solid ${C.line}`,
-    boxShadow: "0 4px 14px rgba(27,67,50,0.06)",
-  },
-  imageBox: {
-    height: 220,
-    background: C.paper,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 14,
-    overflow: "hidden",
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    objectFit: "contain",
-  },
-  productName: {
-    fontFamily: FONT_DISPLAY,
-    fontWeight: 600,
-    fontSize: 18,
-    color: C.ink,
-    margin: "0 0 6px",
-  },
-  categoryTag: {
-    fontSize: 13,
-    color: C.inkSoft,
-    margin: "0 0 10px",
-  },
-  price: {
-    fontFamily: FONT_DISPLAY,
-    fontWeight: 600,
-    fontSize: 22,
-    color: C.danger,
-    margin: "0 0 14px",
-  },
-  buyBtn: {
-    flex: 1,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    background: C.gold,
-    color: "#3A2A08",
-    border: "none",
-    padding: "11px 10px",
-    borderRadius: 999,
-    cursor: "pointer",
-    fontWeight: 700,
-    fontSize: 13.5,
-    fontFamily: FONT_BODY,
-  },
-  detailsBtn: {
-    flex: 1,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    background: C.forest,
-    color: "#FFFFFF",
-    border: "none",
-    padding: "11px 10px",
-    borderRadius: 999,
-    cursor: "pointer",
-    fontWeight: 700,
-    fontSize: 13.5,
-    fontFamily: FONT_BODY,
-  },
-  emptyState: {
-    gridColumn: "1 / -1",
-    textAlign: "center",
-    padding: "60px 20px",
-    background: "#FFFFFF",
-    border: `1px dashed ${C.line}`,
-    borderRadius: 16,
-  },
-  emptyHeading: {
-    fontFamily: FONT_DISPLAY,
-    fontWeight: 600,
-    fontSize: 22,
-    color: C.forest,
-    margin: "14px 0 6px",
-  },
-  emptySub: {
-    fontSize: 14.5,
-    color: C.inkSoft,
-  },
-};
 
 export default UserProductPage;
