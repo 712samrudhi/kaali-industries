@@ -159,12 +159,17 @@ function LoginRegister() {
       </div>
 
       <style>{`
+        @keyframes authGlow {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 1; }
+        }
+
         .auth-container {
           min-height: 100vh;
           display: flex;
           justify-content: center;
           align-items: center;
-          background: #F6F3EA;
+          background: #0B0B0D;
           font-family: 'Segoe UI', Arial, sans-serif;
           padding: 30px 16px;
         }
@@ -173,17 +178,17 @@ function LoginRegister() {
           width: 880px;
           min-height: 540px;
           display: flex;
-          background: #fff;
+          background: #141416;
           border-radius: 20px;
           overflow: hidden;
-          box-shadow: 0 20px 50px rgba(23,63,46,0.18);
-          border: 1px solid #E7E2D3;
+          box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,183,77,0.08);
+          border: 1px solid #26262a;
         }
 
         .auth-left {
           position: relative;
           width: 42%;
-          background: linear-gradient(160deg, #173F2E 0%, #0E2B20 100%);
+          background: radial-gradient(120% 120% at 20% 20%, #1F1B14 0%, #0B0B0D 70%);
           color: #fff;
           display: flex;
           flex-direction: column;
@@ -198,8 +203,20 @@ function LoginRegister() {
           content: "";
           position: absolute;
           top: 0; left: 0; right: 0;
-          height: 4px;
-          background: linear-gradient(90deg, #4C7A5D, #C9A24B);
+          height: 3px;
+          background: linear-gradient(90deg, transparent, #FFB74D, transparent);
+          animation: authGlow 2.4s ease-in-out infinite;
+        }
+
+        .auth-left::after {
+          content: "";
+          position: absolute;
+          width: 260px;
+          height: 260px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(255,183,77,0.18) 0%, transparent 70%);
+          bottom: -80px;
+          right: -80px;
         }
 
         .auth-eyebrow {
@@ -208,49 +225,61 @@ function LoginRegister() {
           text-transform: uppercase;
           font-size: 11.5px;
           font-weight: 700;
-          color: #C9A24B;
-          border: 1px solid #C9A24B;
+          color: #FFB74D;
+          border: 1px solid rgba(255,183,77,0.5);
           border-radius: 999px;
           padding: 5px 14px;
           margin-bottom: 18px;
+          position: relative;
+          z-index: 1;
         }
 
         .auth-emoji {
           font-size: 44px;
           margin-bottom: 6px;
+          position: relative;
+          z-index: 1;
+          filter: drop-shadow(0 0 14px rgba(255,183,77,0.5));
         }
 
         .auth-left h1 {
-          font-size: 26px;
+          font-size: 27px;
           font-weight: 800;
           margin: 6px 0 10px;
+          position: relative;
+          z-index: 1;
         }
 
         .auth-left p {
-          color: #C9D6CD;
+          color: #9B9B9F;
           font-size: 14.5px;
           line-height: 1.5;
           max-width: 260px;
+          position: relative;
+          z-index: 1;
         }
 
         .auth-left button {
           margin-top: 26px;
           padding: 12px 26px;
-          border: 2px solid #C9A24B;
+          border: 2px solid #FFB74D;
           border-radius: 999px;
           background: transparent;
-          color: #C9A24B;
+          color: #FFB74D;
           cursor: pointer;
           font-weight: 700;
           font-size: 14px;
           letter-spacing: 0.3px;
           transition: all 0.25s ease;
+          position: relative;
+          z-index: 1;
         }
 
         .auth-left button:hover {
-          background: #C9A24B;
-          color: #0E2B20;
+          background: #FFB74D;
+          color: #0B0B0D;
           transform: translateY(-2px);
+          box-shadow: 0 10px 24px rgba(255,183,77,0.35);
         }
 
         .auth-right {
@@ -259,10 +288,11 @@ function LoginRegister() {
           display: flex;
           justify-content: center;
           flex-direction: column;
+          background: #141416;
         }
 
         .auth-right h2 {
-          color: #173F2E;
+          color: #F2F2F0;
           font-size: 24px;
           font-weight: 800;
           margin-bottom: 18px;
@@ -277,16 +307,22 @@ function LoginRegister() {
           padding: 13px 16px;
           margin: 7px 0;
           border-radius: 10px;
-          border: 1px solid #E0DBC9;
+          border: 1px solid #2C2C30;
+          background: #1B1B1E;
+          color: #F2F2F0;
           font-size: 14.5px;
           outline: none;
           transition: border-color 0.25s ease, box-shadow 0.25s ease;
           font-family: inherit;
         }
 
+        input::placeholder {
+          color: #6E6E73;
+        }
+
         input:focus {
-          border-color: #C9A24B;
-          box-shadow: 0 0 0 3px rgba(201,162,75,0.18);
+          border-color: #FFB74D;
+          box-shadow: 0 0 0 3px rgba(255,183,77,0.18);
         }
 
         .auth-right button {
@@ -294,8 +330,8 @@ function LoginRegister() {
           margin-top: 14px;
           border: none;
           border-radius: 10px;
-          background: #173F2E;
-          color: #fff;
+          background: #FFB74D;
+          color: #0B0B0D;
           cursor: pointer;
           font-weight: 700;
           font-size: 15px;
@@ -304,9 +340,9 @@ function LoginRegister() {
         }
 
         .auth-right button:hover {
-          background: #C9A24B;
-          color: #0E2B20;
+          background: #ffc670;
           transform: translateY(-2px);
+          box-shadow: 0 10px 24px rgba(255,183,77,0.3);
         }
 
         @media (max-width: 900px) {
