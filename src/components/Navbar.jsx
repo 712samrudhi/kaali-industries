@@ -78,13 +78,11 @@ function Navbar() {
       {/* Main nav */}
       <nav className="ki-navbar">
         <Link to="/" className="ki-nav-brand" onClick={() => setMenuOpen(false)}>
-          <span className="ki-nav-brand-mark">
-            <Icon.Sprout style={{ width: 20, height: 20, color: "#fff" }} />
-          </span>
-          <span className="ki-nav-brand-text">
-            <span className="ki-nav-brand-name">Kaali Industries</span>
-            <span className="ki-nav-brand-tag">Agricultural Solutions</span>
-          </span>
+          <img
+            src="/images/logo.jpg"
+            alt="Kaali Industries Logo"
+            className="ki-nav-logo"
+          />
         </Link>
 
         <div className={`ki-nav-links${menuOpen ? " open" : ""}`}>
@@ -199,14 +197,13 @@ const navCss = `
     border-bottom: 1px solid ${C.line};
   }
 
-  .ki-nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; flex-shrink: 0; }
-  .ki-nav-brand-mark {
-    width: 42px; height: 42px; border-radius: 11px; background: ${C.forest};
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  .ki-nav-brand { display: flex; align-items: center; text-decoration: none; flex-shrink: 0; }
+  .ki-nav-logo {
+    width: 190px;
+    height: 64px;
+    object-fit: contain;
+    display: block;
   }
-  .ki-nav-brand-text { display: flex; flex-direction: column; line-height: 1.15; }
-  .ki-nav-brand-name { font-family: ${FONT_DISPLAY}; font-weight: 600; font-size: 20px; color: ${C.forest}; }
-  .ki-nav-brand-tag { font-family: ${FONT_BODY}; font-size: 11px; letter-spacing: 0.05em; color: ${C.inkSoft}; }
 
   .ki-nav-links { display: flex; align-items: center; gap: 30px; flex: 1; }
   .ki-nav-links > .ki-link { color: ${C.ink}; font-family: ${FONT_BODY}; font-size: 15px; font-weight: 600; }
@@ -249,7 +246,7 @@ const navCss = `
     .ki-nav-mobile-actions { display: flex; gap: 10px; }
     .ki-nav-mobile-actions a { flex: 1; }
     .ki-nav-mobile-actions button { width: 100%; }
-    .ki-nav-brand-tag { display: none; }
+    .ki-nav-logo { width: 150px; height: 50px; }
   }
 `;
 
